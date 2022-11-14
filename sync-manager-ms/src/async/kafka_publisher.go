@@ -23,7 +23,7 @@ func NewSyncRequestPublisherServiceImpl(syncProducer sarama.SyncProducer, syncRe
 }
 
 func (publisherService *SyncRequestPublisherServiceImpl) Send(value []byte) error {
-	defer publisherService.syncProducer.Close()
+	// defer publisherService.syncProducer.Close()
 	msg := &sarama.ProducerMessage{
 		Topic: publisherService.syncRequestTopic,
 		Value: sarama.StringEncoder(value),
