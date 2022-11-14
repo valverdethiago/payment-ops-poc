@@ -1,0 +1,1 @@
+CREATE TYPE account_activity_type as ENUM ('CREATED', 'UPDATED', 'DISABLED', 'ENABLED', 'INVALIDATED');
