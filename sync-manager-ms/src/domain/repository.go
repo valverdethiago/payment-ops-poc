@@ -7,6 +7,6 @@ import (
 
 type SyncRequestRepository interface {
 	Find(id bson.ObjectId) (*SyncRequest, error)
-	FindPendingRequests(AccountId uuid.UUID, Type SyncType) ([]SyncRequest, error)
+	FindPendingRequests(AccountId uuid.UUID, Type *SyncType) ([]SyncRequest, error)
 	Store(Request *SyncRequest) (*SyncRequest, error)
 }

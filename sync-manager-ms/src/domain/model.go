@@ -14,7 +14,20 @@ const (
 	REQUEST_STATUS_CREATED    RequestStatus = "CREATED"
 	REQUEST_STATUS_PENDING    RequestStatus = "PENDING"
 	REQUEST_STATUS_FAILED     RequestStatus = "FAILED"
-	REQIEST_STATUS_SUCCESSFUL RequestStatus = "SUCCESSFUL"
+	REQUEST_STATUS_SUCCESSFUL RequestStatus = "SUCCESSFUL"
+)
+
+var (
+	SYNC_TYPES map[SyncType]struct{} = map[SyncType]struct{}{
+		SYNC_TYPE_BALANCES:     {},
+		SYNC_TYPE_TRANSACTIONS: {},
+	}
+	REQUEST_STATUSES map[RequestStatus]struct{} = map[RequestStatus]struct{}{
+		REQUEST_STATUS_CREATED:    {},
+		REQUEST_STATUS_PENDING:    {},
+		REQUEST_STATUS_FAILED:     {},
+		REQUEST_STATUS_SUCCESSFUL: {},
+	}
 )
 
 type ProviderSyncRequest struct {
@@ -25,7 +38,7 @@ type ProviderSyncRequest struct {
 type SyncRequest struct {
 	ID            bson.ObjectId `json:"id,omitempty" `
 	AccountId     uuid.UUID     `json: "AccountId"`
-	SyncType      SyncType      `json: "SyncType"`
+	SyncType      *SyncType     `json: "SyncType"`
 	RequestStatus RequestStatus `json: "RequestStatus"`
 	CreatedAt     int64         `json: "CreatedAt"`
 }

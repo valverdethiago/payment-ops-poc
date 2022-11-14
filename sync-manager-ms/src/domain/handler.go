@@ -4,9 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -15,12 +13,12 @@ const (
 )
 
 type requestId struct {
-	ID bson.ObjectId `uri:"id" binding: "required"`
+	ID string `uri:"id" binding: "required"`
 }
 
 type newSyncRequest struct {
-	AccountId uuid.UUID `uri:"accountId" binding: "required"`
-	SyncType  SyncType  `uri:"syncType" binding: "required,enum"`
+	AccountId string `uri:"accountId" binding: "required"`
+	SyncType  string `uri:"syncType" binding: "required,enum"`
 }
 
 type SyncRequestController struct {
@@ -53,13 +51,20 @@ func (controller *SyncRequestController) NewRequest(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	created, err := controller.service.Request(req.AccountId, req.SyncType)
+	AccountId, err := parseUUID(req.AccountId)
 	if err != nil {
-		if err == ErrorInvalidValueForSyncType {
-			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		} else {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		}
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	SyncType, err := parseSyncType(req.SyncType)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	created, err := controller.service.Request(AccountId, SyncType)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 	ctx.JSON(http.StatusOK, created)
 }
@@ -69,7 +74,8 @@ func (controller *SyncRequestController) assertRequestExists(ctx *gin.Context) (
 	if err != nil {
 		return nil, err
 	}
-	syncRequest, err := controller.service.Find(req.ID)
+	ID := parseBson(req.ID)
+	syncRequest, err := controller.service.Find(ID)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			ctx.JSON(http.StatusNotFound, gin.H{"message": "No request found for the given id"})

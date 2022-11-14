@@ -2,7 +2,6 @@ package domain
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -10,10 +9,6 @@ import (
 
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/infra"
 	"github.com/google/uuid"
-)
-
-var (
-	ErrorInvalidValueForSyncType = errors.New("Invalid value for SyncType")
 )
 
 type syncRequestService struct {
@@ -33,7 +28,7 @@ func (service *syncRequestService) Find(id bson.ObjectId) (*SyncRequest, error) 
 	return service.syncRequestRepository.Find(id)
 }
 
-func (service *syncRequestService) Request(AccountId uuid.UUID, Type SyncType) (*SyncRequest, error) {
+func (service *syncRequestService) Request(AccountId uuid.UUID, Type *SyncType) (*SyncRequest, error) {
 	requests, err := service.syncRequestRepository.FindPendingRequests(AccountId, Type)
 	if err != nil || (requests != nil && len(requests) > 0) {
 		if err == mgo.ErrNotFound {
@@ -44,7 +39,7 @@ func (service *syncRequestService) Request(AccountId uuid.UUID, Type SyncType) (
 	return service.createSyncRequest(AccountId, Type)
 }
 
-func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type SyncType) (_ *SyncRequest, err error) {
+func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *SyncType) (_ *SyncRequest, err error) {
 
 	request := &SyncRequest{
 		ID:            bson.NewObjectId(),
