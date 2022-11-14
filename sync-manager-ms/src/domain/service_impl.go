@@ -46,7 +46,7 @@ func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *
 		RequestStatus: REQUEST_STATUS_CREATED,
 		CreatedAt:     time.Now().Unix(),
 		SyncType:      Type,
-		AccountId:     AccountId,
+		AccountId:     AccountId.String(),
 	}
 	entity, err := service.syncRequestRepository.Store(request)
 	if err != nil {

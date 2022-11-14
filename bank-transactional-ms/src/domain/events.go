@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type OnMessageReceive func(string) error
@@ -54,8 +55,11 @@ func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value stri
 	}
 	subscriberService.syncRequestService.ChangeToPendingStatus(ID)
 	providerSyncRequest := ProviderSyncRequest{
-		AccountId: AccountID,
-		SyncType:  syncRequest.SyncType,
+		ID:            ID,
+		AccountId:     AccountID,
+		SyncType:      syncRequest.SyncType,
+		RequestStatus: REQUEST_STATUS_CREATED,
+		CreatedAt:     time.Now().Unix(),
 	}
 	return subscriberService.syncRequestService.RequestProviderSync(configuration.KafkaInputTopicName, providerSyncRequest)
 }
