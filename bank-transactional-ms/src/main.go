@@ -33,7 +33,7 @@ func configureService() domain.EventSubscriberService {
 }
 
 func configureConsumer(ctx context.Context, config *config.Config) *infra.Consumer {
-	return infra.NewConsumer(ctx, []string{config.KafkaBroker}, config.SyncRequestTopic, "bank-transaction-ms-4")
+	return infra.NewConsumer(ctx, []string{config.KafkaBroker}, config.SyncRequestTopic, "bank-transaction-ms-6")
 }
 
 func configureServer(config *config.Config) *api.Server {
