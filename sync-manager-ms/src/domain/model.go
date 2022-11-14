@@ -41,6 +41,7 @@ type SyncRequest struct {
 	AccountId     string        `bson:"account_id" json:"account_id"`
 	SyncType      *SyncType     `bson:"sync_type" json:"sync_type"`
 	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	Message       *string       `bson:"message" json:"message"`
 	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }
 

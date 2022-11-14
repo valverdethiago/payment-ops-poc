@@ -8,5 +8,5 @@ import (
 type SyncRequestService interface {
 	Find(ID bson.ObjectId) (*SyncRequest, error)
 	Request(AccountId uuid.UUID, Type *SyncType) (*SyncRequest, error)
-	UpdateSyncRequestStatus(request *SyncRequest, status RequestStatus) error
+	UpdateSyncRequestStatus(request *SyncRequest, status RequestStatus, message *string) error
 }

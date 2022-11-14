@@ -17,7 +17,7 @@ type Producer struct {
 func NewProducer(ctx context.Context, brokers []string, topic string) *Producer {
 
 	logger := log.New(os.Stdout, "kafka writer: ", 0)
-	writter := kafka.NewWriter(kafka.WriterConfig{
+	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: brokers,
 		Topic:   topic,
 		Logger:  logger,
@@ -26,7 +26,7 @@ func NewProducer(ctx context.Context, brokers []string, topic string) *Producer 
 	return &Producer{
 		ctx:     ctx,
 		brokers: brokers,
-		writter: *writter,
+		writter: *writer,
 	}
 
 }

@@ -23,12 +23,12 @@ func NewDynamicTopicProducer(ctx context.Context, brokers []string) *DynamicTopi
 
 func (producer *DynamicTopicProducer) SendMessage(topic string, key string, message string) error {
 	logger := log.New(os.Stdout, "kafka writer: ", 0)
-	writter := kafka.NewWriter(kafka.WriterConfig{
+	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: producer.brokers,
 		Topic:   topic,
 		Logger:  logger,
 	})
-	return writter.WriteMessages(producer.ctx, kafka.Message{
+	return writer.WriteMessages(producer.ctx, kafka.Message{
 		Key:   []byte(key),
 		Value: []byte(message),
 	})

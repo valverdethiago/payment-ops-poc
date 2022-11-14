@@ -7,12 +7,10 @@ type BankAccountType string
 type FetchRequestStatus string
 
 const (
-	BANK_ACCOUNT_TYPE          AccountType        = "bank_account"
-	CHECKING                   BankAccountType    = "checking"
-	SAVINGS                    BankAccountType    = "savings"
+	CheckingBankAccountType    BankAccountType    = "checking"
+	SavingsBankAccountType     BankAccountType    = "savings"
 	CompleteFetchRequestStatus FetchRequestStatus = "completed"
 	FailedFetchRequestStatus   FetchRequestStatus = "failed"
-	PendingFetchRequestStatus  FetchRequestStatus = "pending"
 )
 
 type Account struct {
@@ -31,7 +29,7 @@ type Account struct {
 }
 
 type Transaction struct {
-	Account         Account     `json:"amount"`
+	Account         Account     `json:"account"`
 	AccountingType  string      `json:"accounting_type"`
 	Amount          Amount      `json:"amount"`
 	Category        interface{} `json:"category"`

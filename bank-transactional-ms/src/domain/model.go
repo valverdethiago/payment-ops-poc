@@ -19,15 +19,9 @@ const (
 )
 
 var (
-	SyncTypes map[SyncType]struct{} = map[SyncType]struct{}{
+	SyncTypes = map[SyncType]struct{}{
 		SyncTypeBalances:     {},
 		SyncTypeTransactions: {},
-	}
-	RequestStatuses map[RequestStatus]struct{} = map[RequestStatus]struct{}{
-		RequestStatusCreated:    {},
-		RequestStatusPending:    {},
-		RequestStatusFailed:     {},
-		RequestStatusSuccessful: {},
 	}
 )
 

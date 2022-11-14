@@ -11,7 +11,7 @@ import (
 type Producer struct {
 	ctx     context.Context
 	brokers []string
-	writter kafka.Writer
+	writer  kafka.Writer
 }
 
 func NewProducer(ctx context.Context, brokers []string, topic string) *Producer {
@@ -26,13 +26,13 @@ func NewProducer(ctx context.Context, brokers []string, topic string) *Producer 
 	return &Producer{
 		ctx:     ctx,
 		brokers: brokers,
-		writter: *writer,
+		writer:  *writer,
 	}
 
 }
 
 func (producer *Producer) SendMessage(key string, message string) error {
-	return producer.writter.WriteMessages(producer.ctx, kafka.Message{
+	return producer.writer.WriteMessages(producer.ctx, kafka.Message{
 		Key:   []byte(key),
 		Value: []byte(message),
 	})

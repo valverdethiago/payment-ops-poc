@@ -34,7 +34,8 @@ func (e EventSubscriberServiceImpl) OnReceiveSyncRequestUpdate(value string) err
 	if err != nil {
 		return err
 	}
-	return e.syncRequestService.UpdateSyncRequestStatus(syncRequest, syncRequestEvent.RequestStatus)
+	return e.syncRequestService.UpdateSyncRequestStatus(syncRequest,
+		syncRequestEvent.RequestStatus, syncRequestEvent.Message)
 }
 
 func ParseSyncRequestJson(value string) (SyncRequestEvent, error) {

@@ -13,12 +13,12 @@ const (
 )
 
 type requestId struct {
-	ID string `uri:"id" binding: "required"`
+	ID string `uri:"id" binding:"required"`
 }
 
 type newSyncRequest struct {
-	AccountId string `uri:"accountId" binding: "required"`
-	SyncType  string `uri:"syncType" binding: "required,enum"`
+	AccountId string `uri:"accountId" binding:"required"`
+	SyncType  string `uri:"syncType" binding:"required,enum"`
 }
 
 type SyncRequestController struct {

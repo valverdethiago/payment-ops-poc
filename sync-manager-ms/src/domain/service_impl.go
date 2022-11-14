@@ -37,12 +37,13 @@ func (service *syncRequestService) Request(AccountId uuid.UUID, Type *SyncType) 
 	return service.createSyncRequest(AccountId, Type)
 }
 
-func (service *syncRequestService) UpdateSyncRequestStatus(syncRequest *SyncRequest, status RequestStatus) error {
-	if syncRequest.RequestStatus == status {
+func (service *syncRequestService) UpdateSyncRequestStatus(request *SyncRequest, status RequestStatus, message *string) error {
+	if request.RequestStatus == status {
 		return nil
 	}
-	syncRequest.RequestStatus = status
-	syncRequest, err := service.syncRequestRepository.Update(syncRequest)
+	request.RequestStatus = status
+	request.Message = message
+	request, err := service.syncRequestRepository.Update(request)
 	return err
 }
 
