@@ -28,6 +28,35 @@ services:
     networks:
       - payment-ops-poc-network
 
+  trio-provider-db:
+    image: mongo
+    container_name: trio-provider-db
+    hostname: trio-provider-db
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: trio_provider
+      MONGODB_DATABASE: trio_provider
+    volumes:
+      - trio-provider-data-volume:/data/db
+    networks:
+      - payment-ops-poc-network
+
+  trio-provider-db-ui:
+    image: mongo-express
+    container_name: trio-provider-db-ui
+    hostname: trio-provider-db-ui
+    restart: unless-stopped
+    ports:
+      - "8881:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: trio-provider-db
+    links:
+      - trio-provider-db
+    networks:
+      - payment-ops-poc-network
+
   bank-transactional-db:
     image: postgres:10-alpine
     container_name: bank-transactional-db
@@ -53,7 +82,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: "thiago@pauca.co"
       PGADMIN_DEFAULT_PASSWORD: "Pauca!2022"
     ports:
-      - "8881:80"
+      - "9001:80"
     links:
       - bank-transactional-db
     networks:
@@ -152,6 +181,8 @@ volumes:
   sync-manager-data-volume:
     external: false
   bank-transactional-data-volume:
+    external: false
+  trio-provider-data-volume:
     external: false
 
 
