@@ -144,7 +144,10 @@ services:
                        cub kafka-ready -b kafka:19092 1 20 && \
                        kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_INPUT   && \
                        kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_OUTPUT  && \
-                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic TRIO_SYNC_REQUEST_INPUT '"
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic TRIO_SYNC_REQUEST_INPUT && \
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic BALANCE_UPDATE && \
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic TRANSACTIONS_UPDATE' "
+
 
     environment:
       # The following settings are listed here only to satisfy the image's requirements.
