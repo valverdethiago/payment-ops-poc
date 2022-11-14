@@ -56,13 +56,14 @@ func configureServer(config *config.Config) *api.Server {
 	accountService, accountBalanceService, transactionService := configureServices(accountRepository,
 		accountBalanceRepository, transactionRepository)
 	configureEventServices(ctx, config, accountService, accountBalanceService, transactionService)
-	configureControllers(*server)
+	configureControllers(*server, accountService, transactionService)
 	return server
 }
 
-func configureControllers(server api.Server) {
-	controller := domain.NewTestController()
-	server.ConfigureController(controller)
+func configureControllers(server api.Server, accountService domain.AccountService,
+	transactionService domain.TransactionService) {
+	server.ConfigureController(domain.NewTestController())
+	server.ConfigureController(domain.NewAccountControllerImpl(accountService, transactionService))
 }
 
 func configureRepositories(ctx context.Context, querier db.Querier) (domain.AccountRepository, domain.AccountBalanceRepository,
@@ -75,14 +76,17 @@ func configureRepositories(ctx context.Context, querier db.Querier) (domain.Acco
 func configureServices(accountRepository domain.AccountRepository,
 	accountBalanceRepository domain.AccountBalanceRepository,
 	transactionRepository domain.TransactionRepository) (domain.AccountService,
-	domain.AccountBalanceService, domain.TransactionService) {
-	return domain.NewAccountServiceImpl(accountRepository),
-		domain.NewAccountBalanceServiceImpl(accountBalanceRepository),
-		domain.NewTransactionServiceImpl(transactionRepository)
+	domain.BalanceService, domain.TransactionService) {
+	accountBalanceService := domain.NewAccountBalanceServiceImpl(accountBalanceRepository)
+	transactionService := domain.NewTransactionServiceImpl(transactionRepository)
+	accountService := domain.NewAccountServiceImpl(accountRepository, accountBalanceService)
+	return accountService,
+		accountBalanceService,
+		transactionService
 }
 
 func configureEventServices(ctx context.Context, config *config.Config,
-	accountService domain.AccountService, accountBalanceService domain.AccountBalanceService,
+	accountService domain.AccountService, accountBalanceService domain.BalanceService,
 	transactionService domain.TransactionService) {
 	eventDispatcher := configureEventDispatcher(ctx, config)
 	syncRequestService := configureSyncRequestService(eventDispatcher)
@@ -96,7 +100,7 @@ func configureSyncRequestService(eventDispatcher domain.EventDispatcher) domain.
 }
 
 func configureEventSubscriberService(accountService domain.AccountService,
-	accountBalanceService domain.AccountBalanceService,
+	accountBalanceService domain.BalanceService,
 	transactionService domain.TransactionService,
 	syncRequestService domain.SyncRequestService) domain.EventSubscriberService {
 	return domain.NewEventSubscriberServiceImpl(accountService, accountBalanceService, transactionService,

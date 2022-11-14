@@ -12,9 +12,9 @@ import (
 )
 
 const findAllBalancesByAccount = `-- name: FindAllBalancesByAccount :many
-select balance.account_balance_uuid, balance.account_uuid, balance.amount, balance.currency, balance.date_time
-from account_balance as balance
-where balance.account_uuid = $1
+  select balance.account_balance_uuid, balance.account_uuid, balance.amount, balance.currency, balance.date_time
+    from account_balance as balance
+   where balance.account_uuid = $1
 order by balance.date_time desc
 `
 

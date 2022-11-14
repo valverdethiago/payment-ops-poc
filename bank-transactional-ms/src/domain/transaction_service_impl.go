@@ -19,6 +19,10 @@ func (service TransactionServiceImpl) FindAllTransactionsByAccount(accountId uui
 	return service.transactionRepository.FindAllTransactionsByAccount(accountId)
 }
 
+func (service TransactionServiceImpl) FindByAccountIdAndTransactionId(accountId uuid.UUID, transactionId uuid.UUID) (*db.Transaction, error) {
+	return service.transactionRepository.FindByAccountIdAndTransactionId(accountId, transactionId)
+}
+
 func (service TransactionServiceImpl) InsertTransaction(transaction db.Transaction) (*db.Transaction, error) {
 	return service.transactionRepository.InsertTransaction(transaction)
 }

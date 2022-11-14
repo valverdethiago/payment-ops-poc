@@ -2,6 +2,7 @@ package domain
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2"
@@ -45,8 +46,7 @@ func (controller *SyncRequestController) FindById(ctx *gin.Context) {
 }
 
 func (controller *SyncRequestController) NewRequest(ctx *gin.Context) {
-	var req newSyncRequest
-	err := ctx.ShouldBindUri(&req)
+	req, err := parseNewRequest(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -61,12 +61,24 @@ func (controller *SyncRequestController) NewRequest(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	created, err := controller.service.Request(AccountId, SyncType)
+	now := time.Now()
+	created, err := controller.service.Request(AccountId, SyncType, now)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, created)
+	if created.CreatedAt.Before(now) {
+		ctx.JSON(http.StatusAlreadyReported, created)
+		return
+	}
+	ctx.JSON(http.StatusCreated, created)
+}
+
+func parseNewRequest(ctx *gin.Context) (*newSyncRequest, error) {
+	return &newSyncRequest{
+		AccountId: ctx.Param("accountId"),
+		SyncType:  ctx.Param("syncType"),
+	}, nil
 }
 
 func (controller *SyncRequestController) assertRequestExists(ctx *gin.Context) (*SyncRequest, error) {

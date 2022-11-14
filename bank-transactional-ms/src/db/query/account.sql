@@ -15,3 +15,7 @@ SELECT *
   JOIN configuration as config on config.bank_uuid = bank.bank_uuid
  WHERE account_uuid =$1;
 
+ -- name: ListAllAccounts :many
+SELECT *
+  FROM account;
+

@@ -26,15 +26,15 @@ func (service *syncRequestService) Find(id bson.ObjectId) (*SyncRequest, error) 
 	return service.syncRequestRepository.Find(id)
 }
 
-func (service *syncRequestService) Request(AccountId uuid.UUID, Type *SyncType) (*SyncRequest, error) {
+func (service *syncRequestService) Request(AccountId uuid.UUID, Type *SyncType, time time.Time) (*SyncRequest, error) {
 	requests, err := service.syncRequestRepository.FindPendingRequests(AccountId, Type)
 	if err != nil || (requests != nil && len(requests) > 0) {
 		if err == mgo.ErrNotFound {
-			return service.createSyncRequest(AccountId, Type)
+			return service.createSyncRequest(AccountId, Type, time)
 		}
 		return &requests[0], err
 	}
-	return service.createSyncRequest(AccountId, Type)
+	return service.createSyncRequest(AccountId, Type, time)
 }
 
 func (service *syncRequestService) UpdateSyncRequestStatus(request *SyncRequest, status RequestStatus, message *string) error {
@@ -47,12 +47,12 @@ func (service *syncRequestService) UpdateSyncRequestStatus(request *SyncRequest,
 	return err
 }
 
-func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *SyncType) (_ *SyncRequest, err error) {
+func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *SyncType, time time.Time) (_ *SyncRequest, err error) {
 
 	request := &SyncRequest{
 		ID:            bson.NewObjectId(),
 		RequestStatus: RequestStatusCreated,
-		CreatedAt:     time.Now(),
+		CreatedAt:     time,
 		SyncType:      Type,
 		AccountId:     AccountId.String(),
 	}

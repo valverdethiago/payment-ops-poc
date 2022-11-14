@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"context"
-
 	db "github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/db/sqlc"
 	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/domain"
 	"github.com/google/uuid"
@@ -27,6 +26,9 @@ func (repository AccountBalanceRepositoryImpl) FindAllBalancesByAccount(accountI
 
 func (repository AccountBalanceRepositoryImpl) FindCurrentBalanceByAccount(accountId uuid.UUID) (*db.AccountBalance, error) {
 	balance, err := repository.queries.FindCurrentBalanceByAccount(repository.ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
 	return &balance, err
 }
 

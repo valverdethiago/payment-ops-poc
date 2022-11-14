@@ -23,12 +23,12 @@ type EventDispatcher interface {
 
 type EventSubscriberServiceImpl struct {
 	accountService        AccountService
-	accountBalanceService AccountBalanceService
+	accountBalanceService BalanceService
 	transactionService    TransactionService
 	syncRequestService    SyncRequestService
 }
 
-func NewEventSubscriberServiceImpl(accountService AccountService, accountBalanceService AccountBalanceService,
+func NewEventSubscriberServiceImpl(accountService AccountService, accountBalanceService BalanceService,
 	transactionService TransactionService, syncRequestService SyncRequestService) EventSubscriberService {
 	return &EventSubscriberServiceImpl{
 		accountService:        accountService,

@@ -9,12 +9,21 @@ import (
 type AccountService interface {
 	FindAccountInformation(id uuid.UUID) (*db.Account, *db.Bank, *db.Configuration, error)
 	IsAccountInValidState(account *db.Account) bool
+	ListAll() ([]db.Account, error)
+	GetAccountSnapshot(ID uuid.UUID) (*AccountResponse, error)
 }
 
-type AccountBalanceService interface {
+type BalanceService interface {
 	FindAllBalancesByAccount(accountId uuid.UUID) (*[]db.AccountBalance, error)
 	FindCurrentBalanceByAccount(accountId uuid.UUID) (*db.AccountBalance, error)
 	UpdateAccountBalance(accountId uuid.UUID, amount float64, currency string) (*db.AccountBalance, error)
+}
+
+type TransactionService interface {
+	FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error)
+	InsertTransaction(transaction db.Transaction) (*db.Transaction, error)
+	InsertTransactions(transactions []db.Transaction) ([]db.Transaction, error)
+	FindByAccountIdAndTransactionId(accountId uuid.UUID, transactionId uuid.UUID) (*db.Transaction, error)
 }
 
 type SyncRequestService interface {
@@ -23,10 +32,4 @@ type SyncRequestService interface {
 	ChangeToPendingStatus(ID bson.ObjectId)
 	ChangeToSuccessfulStatus(ID bson.ObjectId)
 	RequestProviderSync(name string, request ProviderSyncRequest) error
-}
-
-type TransactionService interface {
-	FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error)
-	InsertTransaction(transaction db.Transaction) (*db.Transaction, error)
-	InsertTransactions(transactions []db.Transaction) ([]db.Transaction, error)
 }

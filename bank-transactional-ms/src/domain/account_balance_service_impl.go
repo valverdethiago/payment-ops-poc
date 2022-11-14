@@ -9,7 +9,7 @@ type AccountBalanceServiceImpl struct {
 	accountBalanceRepository AccountBalanceRepository
 }
 
-func NewAccountBalanceServiceImpl(accountBalanceRepository AccountBalanceRepository) AccountBalanceService {
+func NewAccountBalanceServiceImpl(accountBalanceRepository AccountBalanceRepository) BalanceService {
 	return &AccountBalanceServiceImpl{
 		accountBalanceRepository: accountBalanceRepository,
 	}

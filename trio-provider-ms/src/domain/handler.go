@@ -63,6 +63,7 @@ func (controller *WebHookController) handleBalancesCallback(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": payload.Error.Message})
 		controller.syncRequestService.ChangeToFailingStatus(account.InternalAccountId, SyncTypeBalances,
 			payload.Error.Message)
+		return
 	}
 	err = controller.balanceService.UpdateAccountBalance(payload.Event.AccountID, payload.Data.Amount.Amount,
 		payload.Data.Amount.Currency)

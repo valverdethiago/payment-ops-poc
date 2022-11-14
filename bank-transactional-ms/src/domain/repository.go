@@ -8,6 +8,7 @@ import (
 type AccountRepository interface {
 	Find(id uuid.UUID) (*db.Account, *db.Bank, *db.Configuration, error)
 	FindAccountStatuses(id uuid.UUID) (db.FindAccountStatusesRow, error)
+	ListAll() ([]db.Account, error)
 }
 
 type AccountBalanceRepository interface {
@@ -19,4 +20,5 @@ type AccountBalanceRepository interface {
 type TransactionRepository interface {
 	FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error)
 	InsertTransaction(transaction db.Transaction) (*db.Transaction, error)
+	FindByAccountIdAndTransactionId(accountId uuid.UUID, transactionId uuid.UUID) (*db.Transaction, error)
 }

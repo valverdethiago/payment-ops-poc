@@ -21,7 +21,22 @@ func NewTransactionRepositoryImpl(queries db.Querier, ctx context.Context) domai
 
 func (repository TransactionRepositoryImpl) FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error) {
 	transactions, err := repository.queries.FindTransactionsByAccount(repository.ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
 	return &transactions, err
+}
+
+func (repository TransactionRepositoryImpl) FindByAccountIdAndTransactionId(accountId uuid.UUID, transactionId uuid.UUID) (*db.Transaction, error) {
+	params := db.FindByAccountIdAndTransactionIdParams{
+		AccountUuid:     accountId,
+		TransactionUuid: transactionId,
+	}
+	transaction, err := repository.queries.FindByAccountIdAndTransactionId(repository.ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return &transaction, err
 }
 
 func (repository TransactionRepositoryImpl) InsertTransaction(transaction db.Transaction) (*db.Transaction, error) {

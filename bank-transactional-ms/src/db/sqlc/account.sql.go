@@ -87,3 +87,36 @@ func (q *Queries) IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (
 	)
 	return i, err
 }
+
+const listAllAccounts = `-- name: ListAllAccounts :many
+SELECT account_uuid, account_number, account_type, bank_uuid
+  FROM account
+`
+
+func (q *Queries) ListAllAccounts(ctx context.Context) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, listAllAccounts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Account
+	for rows.Next() {
+		var i Account
+		if err := rows.Scan(
+			&i.AccountUuid,
+			&i.AccountNumber,
+			&i.AccountType,
+			&i.BankUuid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -13,6 +13,37 @@ import (
 	"github.com/google/uuid"
 )
 
+const findByAccountIdAndTransactionId = `-- name: FindByAccountIdAndTransactionId :one
+select transaction.transaction_uuid, transaction.account_uuid, transaction.provider_account_id, transaction.description, transaction.description_type, transaction.identification, transaction.status, transaction.amount, transaction.currency, transaction.date_time, transaction.created_at
+ from transaction as transaction
+where transaction.account_uuid = $1
+  and transaction.transaction_uuid = $2
+`
+
+type FindByAccountIdAndTransactionIdParams struct {
+	AccountUuid     uuid.UUID `json:"account_uuid"`
+	TransactionUuid uuid.UUID `json:"transaction_uuid"`
+}
+
+func (q *Queries) FindByAccountIdAndTransactionId(ctx context.Context, arg FindByAccountIdAndTransactionIdParams) (Transaction, error) {
+	row := q.db.QueryRowContext(ctx, findByAccountIdAndTransactionId, arg.AccountUuid, arg.TransactionUuid)
+	var i Transaction
+	err := row.Scan(
+		&i.TransactionUuid,
+		&i.AccountUuid,
+		&i.ProviderAccountID,
+		&i.Description,
+		&i.DescriptionType,
+		&i.Identification,
+		&i.Status,
+		&i.Amount,
+		&i.Currency,
+		&i.DateTime,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const findTransactionsByAccount = `-- name: FindTransactionsByAccount :many
   select transaction.transaction_uuid, transaction.account_uuid, transaction.provider_account_id, transaction.description, transaction.description_type, transaction.identification, transaction.status, transaction.amount, transaction.currency, transaction.date_time, transaction.created_at
     from transaction as transaction

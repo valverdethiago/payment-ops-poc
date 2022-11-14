@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	FindAccountStatuses(ctx context.Context, accountUuid uuid.UUID) (FindAccountStatusesRow, error)
 	FindAllBalancesByAccount(ctx context.Context, accountUuid uuid.UUID) ([]AccountBalance, error)
+	FindByAccountIdAndTransactionId(ctx context.Context, arg FindByAccountIdAndTransactionIdParams) (Transaction, error)
 	FindCurrentBalanceByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountBalance, error)
 	FindLastActivityByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 	FindTransactionsByAccount(ctx context.Context, accountUuid uuid.UUID) ([]Transaction, error)
@@ -23,6 +24,7 @@ type Querier interface {
 	GetFullAccountInfoByID(ctx context.Context, accountUuid uuid.UUID) (GetFullAccountInfoByIDRow, error)
 	InsertTransaction(ctx context.Context, arg InsertTransactionParams) (Transaction, error)
 	IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
+	ListAllAccounts(ctx context.Context) ([]Account, error)
 	UpdateAccountBalance(ctx context.Context, arg UpdateAccountBalanceParams) (AccountBalance, error)
 }
 

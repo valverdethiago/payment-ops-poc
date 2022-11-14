@@ -42,6 +42,10 @@ func (repository AccountRepositoryImpl) Find(id uuid.UUID) (*db.Account, *db.Ban
 		}, nil
 }
 
+func (repository AccountRepositoryImpl) ListAll() ([]db.Account, error) {
+	return repository.queries.ListAllAccounts(repository.ctx)
+}
+
 func (repository AccountRepositoryImpl) FindAccountStatuses(id uuid.UUID) (db.FindAccountStatusesRow, error) {
 	return repository.queries.FindAccountStatuses(repository.ctx, id)
 }

@@ -70,7 +70,7 @@ type AccountActivity struct {
 type AccountBalance struct {
 	AccountBalanceUuid uuid.UUID    `json:"account_balance_uuid"`
 	AccountUuid        uuid.UUID    `json:"account_uuid"`
-	Amount             string       `json:"amount"`
+	Amount             float64      `json:"amount"`
 	Currency           string       `json:"currency"`
 	DateTime           sql.NullTime `json:"date_time"`
 }
