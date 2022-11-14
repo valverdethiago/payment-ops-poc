@@ -13,7 +13,7 @@ import (
 
 const findAllBalancesByAccount = `-- name: FindAllBalancesByAccount :many
 select balance.account_balance_uuid, balance.account_uuid, balance.amount, balance.currency, balance.date_time
-from account_balances as balance
+from account_balance as balance
 where balance.account_uuid = $1
 order by balance.date_time desc
 `
@@ -49,7 +49,7 @@ func (q *Queries) FindAllBalancesByAccount(ctx context.Context, accountUuid uuid
 
 const findCurrentBalanceByAccount = `-- name: FindCurrentBalanceByAccount :one
   select balance.account_balance_uuid, balance.account_uuid, balance.amount, balance.currency, balance.date_time
-    from account_balances as balance
+    from account_balance as balance
    where balance.account_uuid = $1
 order by balance.date_time desc
    limit 1
@@ -69,7 +69,7 @@ func (q *Queries) FindCurrentBalanceByAccount(ctx context.Context, accountUuid u
 }
 
 const updateAccountBalance = `-- name: UpdateAccountBalance :one
-INSERT INTO account_balances (account_uuid, amount, currency)
+INSERT INTO account_balance (account_uuid, amount, currency)
       VALUES ($1, $2, $3)
 RETURNING account_balance_uuid, account_uuid, amount, currency, date_time
 `

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS account_balances
+CREATE TABLE IF NOT EXISTS account_balance
 (
   account_balance_uuid UUID NOT NULL DEFAULT uuid_generate_v4(),
   account_uuid UUID NOT NULL,
