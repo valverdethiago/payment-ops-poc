@@ -1,4 +1,4 @@
-module github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms
+module github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms
 
 go 1.17
 
@@ -16,7 +16,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.15.2 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -52,7 +51,6 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/szuecs/gin-glog v1.1.1 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect

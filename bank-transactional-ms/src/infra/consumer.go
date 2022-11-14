@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/domain"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/domain"
 	"github.com/segmentio/kafka-go"
 )
 

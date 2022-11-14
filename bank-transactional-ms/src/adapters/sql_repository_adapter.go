@@ -3,8 +3,8 @@ package adapters
 import (
 	"context"
 
-	db "github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/db/sqlc"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/domain"
+	db "github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/db/sqlc"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/domain"
 	"github.com/google/uuid"
 )
 

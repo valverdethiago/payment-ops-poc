@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/config"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/config"
 	"github.com/Shopify/sarama"
 )
 

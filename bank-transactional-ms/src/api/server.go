@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/config"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/config"
 	"github.com/gin-gonic/gin"
 	ginglog "github.com/szuecs/gin-glog"
 )

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/domain"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/infra"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/domain"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/infra"
 	"gopkg.in/mgo.v2/bson"
 )
 

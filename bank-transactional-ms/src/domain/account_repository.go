@@ -1,7 +1,7 @@
 package domain
 
 import (
-	db "github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/db/sqlc"
+	db "github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/db/sqlc"
 	"github.com/google/uuid"
 )
 

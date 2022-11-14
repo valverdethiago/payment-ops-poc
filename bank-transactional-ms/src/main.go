@@ -7,13 +7,13 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/adapters"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/api"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/config"
-	db "github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/db/sqlc"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/domain"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/infra"
-	"github.com/Pauca-Technologies/payment-ops-poc/bank-tranactional-ms/util"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/adapters"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/api"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/config"
+	db "github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/db/sqlc"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/domain"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/infra"
+	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/util"
 )
 
 var database *sql.DB
