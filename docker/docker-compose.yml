@@ -83,6 +83,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: "Pauca!2022"
     ports:
       - "9001:80"
+    volumes:
+      - bank-transactional-data-ui-volume:/var/lib/pgadmin
     links:
       - bank-transactional-db
     networks:
@@ -181,6 +183,8 @@ volumes:
   sync-manager-data-volume:
     external: false
   bank-transactional-data-volume:
+    external: false
+  bank-transactional-data-ui-volume:
     external: false
   trio-provider-data-volume:
     external: false
