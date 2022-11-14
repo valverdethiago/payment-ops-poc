@@ -18,7 +18,7 @@ type requestId struct {
 
 type newSyncRequest struct {
 	AccountId string   `uri:"accountId" binding: "required"`
-	SyncType  SyncType `uri:"syncType" binding: "required"`
+	SyncType  SyncType `uri:"syncType" binding: "required,enum"`
 }
 
 type SyncRequestController struct {

@@ -15,7 +15,7 @@ type Config struct {
 	ServerAddress    string `mapstructure:"SYNC_MANAGER_SERVER_ADDRESS"`
 	ReadTimeout      int    `mapstructure:"SYNC_MANAGER_READ_TIMEOUT"`
 	WriteTimeout     int    `mapstructure:"SYNC_MANAGER_WRITE_TIMEOUT"`
-	SyncRequestTopic string `mapstructure:"SYNC_MANAGER_REQUEST_TOPIC"`
+	SyncRequestTopic string `mapstructure:"SYNC_REQUEST_TOPIC"`
 }
 
 // LoadConfig loads config from env

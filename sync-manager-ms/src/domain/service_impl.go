@@ -7,6 +7,8 @@ import (
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/infra"
 )
 
 var (
@@ -15,14 +17,14 @@ var (
 
 type syncRequestService struct {
 	syncRequestRepository SyncRequestRepository
-	eventNotifierService  EventNotifierService
+	producer              *infra.Producer
 }
 
 func NewSyncRequestService(syncRequestRepository SyncRequestRepository,
-	eventNotifierService EventNotifierService) SyncRequestService {
+	producer *infra.Producer) SyncRequestService {
 	return &syncRequestService{
 		syncRequestRepository,
-		eventNotifierService,
+		producer,
 	}
 }
 
@@ -58,7 +60,7 @@ func (service *syncRequestService) createSyncRequest(AccountId string, Type Sync
 	if err != nil {
 		return nil, err
 	}
-	err = service.eventNotifierService.Send(jsonString)
+	err = service.producer.SendMessage(bson.NewObjectId().Hex(), string(jsonString))
 	if err != nil {
 		return nil, err
 	}
