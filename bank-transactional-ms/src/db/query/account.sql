@@ -6,5 +6,5 @@ SELECT *
 -- name: IsAccountEnabled :one
  SELECT * 
   FROM account_activity
- WHERE account_uuid =$1
+ WHERE account_uuid =$1;
 

@@ -17,6 +17,7 @@ type Querier interface {
 	GetBankByID(ctx context.Context, bankUuid uuid.UUID) (Bank, error)
 	GetConfigurationByBankID(ctx context.Context, bankUuid uuid.UUID) (Configuration, error)
 	GetConfigurationByID(ctx context.Context, configurationUuid uuid.UUID) (Configuration, error)
+	IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 }
 
 var _ Querier = (*Queries)(nil)

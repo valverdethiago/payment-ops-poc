@@ -28,3 +28,21 @@ func (q *Queries) GetAccountByID(ctx context.Context, accountUuid uuid.UUID) (Ac
 	)
 	return i, err
 }
+
+const isAccountEnabled = `-- name: IsAccountEnabled :one
+ SELECT account_activity_uuid, account_uuid, activity_type, date_time 
+  FROM account_activity
+ WHERE account_uuid =$1
+`
+
+func (q *Queries) IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error) {
+	row := q.db.QueryRowContext(ctx, isAccountEnabled, accountUuid)
+	var i AccountActivity
+	err := row.Scan(
+		&i.AccountActivityUuid,
+		&i.AccountUuid,
+		&i.ActivityType,
+		&i.DateTime,
+	)
+	return i, err
+}
