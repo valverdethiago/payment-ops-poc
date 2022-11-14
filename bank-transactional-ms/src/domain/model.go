@@ -32,23 +32,23 @@ var (
 
 type SyncRequest struct {
 	ID            string        `json:"id,omitempty" `
-	AccountId     string        `json: "AccountId"`
-	SyncType      SyncType      `json: "SyncType"`
-	RequestStatus RequestStatus `json: "RequestStatus"`
-	CreatedAt     int64         `json: "CreatedAt"`
+	AccountId     string        `json:"AccountId"`
+	SyncType      SyncType      `json:"SyncType"`
+	RequestStatus RequestStatus `json:"RequestStatus"`
+	CreatedAt     int64         `json:"CreatedAt"`
 }
 
 type SyncRequestResult struct {
 	ID            bson.ObjectId `json:"id,omitempty" `
-	RequestStatus RequestStatus `json: "RequestStatus"`
-	Message       *string       `json: "RequestStatus"`
-	SentAt        int64         `json: "CreatedAt"`
+	RequestStatus RequestStatus `json:"RequestStatus"`
+	Message       *string       `json:"Message"`
+	SentAt        int64         `json:"CreatedAt"`
 }
 
 type ProviderSyncRequest struct {
 	ID            bson.ObjectId `json:"id,omitempty" `
-	AccountId     uuid.UUID     `json: "AccountId"`
-	SyncType      SyncType      `json: "SyncType"`
-	RequestStatus RequestStatus `json: "RequestStatus"`
-	CreatedAt     int64         `json: "CreatedAt"`
+	AccountId     uuid.UUID     `json:"AccountId"`
+	SyncType      SyncType      `json:"SyncType"`
+	RequestStatus RequestStatus `json:"RequestStatus"`
+	CreatedAt     int64         `json:"CreatedAt"`
 }
