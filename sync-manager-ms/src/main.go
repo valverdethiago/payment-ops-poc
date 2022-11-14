@@ -5,7 +5,6 @@ import (
 
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/adapters"
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/api"
-	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/async"
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/config"
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/domain"
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/util"
@@ -36,8 +35,8 @@ func connectToKafka(config *config.Config) sarama.SyncProducer {
 func configureService(config *config.Config, producer sarama.SyncProducer) domain.SyncRequestService {
 	database := openDatabaseConnection(config)
 	repository := adapters.NewMongoDbStore(database)
-	KafkaPublisher := async.NewSyncRequestPublisherServiceImpl(producer, config.SyncRequestTopic)
-	service := domain.NewSyncRequestService(repository, KafkaPublisher)
+	eventNotifierService := adapters.NewEventNotifierServiceImpl(producer, config.SyncRequestTopic)
+	service := domain.NewSyncRequestService(repository, eventNotifierService)
 	return service
 }
 

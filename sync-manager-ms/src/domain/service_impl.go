@@ -7,8 +7,6 @@ import (
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-
-	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/async"
 )
 
 var (
@@ -16,15 +14,15 @@ var (
 )
 
 type syncRequestService struct {
-	syncRequestRepository       SyncRequestRepository
-	syncRequestPublisherService async.SyncRequestPublisherService
+	syncRequestRepository SyncRequestRepository
+	eventNotifierService  EventNotifierService
 }
 
 func NewSyncRequestService(syncRequestRepository SyncRequestRepository,
-	asyncRequestPublisherService async.SyncRequestPublisherService) SyncRequestService {
+	eventNotifierService EventNotifierService) SyncRequestService {
 	return &syncRequestService{
 		syncRequestRepository,
-		asyncRequestPublisherService,
+		eventNotifierService,
 	}
 }
 
@@ -60,7 +58,7 @@ func (service *syncRequestService) createSyncRequest(AccountId string, Type Sync
 	if err != nil {
 		return nil, err
 	}
-	err = service.syncRequestPublisherService.Send(jsonString)
+	err = service.eventNotifierService.Send(jsonString)
 	if err != nil {
 		return nil, err
 	}
