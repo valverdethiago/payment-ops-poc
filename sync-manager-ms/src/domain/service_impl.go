@@ -43,7 +43,7 @@ func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *
 
 	request := &SyncRequest{
 		ID:            bson.NewObjectId(),
-		RequestStatus: REQUEST_STATUS_CREATED,
+		RequestStatus: RequestStatusCreated,
 		CreatedAt:     time.Now().Unix(),
 		SyncType:      Type,
 		AccountId:     AccountId.String(),

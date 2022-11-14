@@ -9,24 +9,24 @@ type SyncType string
 type RequestStatus string
 
 const (
-	SYNC_TYPE_BALANCES        SyncType      = "BALANCES"
-	SYNC_TYPE_TRANSACTIONS    SyncType      = "TRANSACTIONS"
-	REQUEST_STATUS_CREATED    RequestStatus = "CREATED"
-	REQUEST_STATUS_PENDING    RequestStatus = "PENDING"
-	REQUEST_STATUS_FAILED     RequestStatus = "FAILED"
-	REQUEST_STATUS_SUCCESSFUL RequestStatus = "SUCCESSFUL"
+	SyncTypeBalances        SyncType      = "BALANCES"
+	SyncTypeTransactions    SyncType      = "TRANSACTIONS"
+	RequestStatusCreated    RequestStatus = "CREATED"
+	RequestStatusPending    RequestStatus = "PENDING"
+	RequestStatusFailed     RequestStatus = "FAILED"
+	RequestStatusSuccessful RequestStatus = "SUCCESSFUL"
 )
 
 var (
-	SYNC_TYPES map[SyncType]struct{} = map[SyncType]struct{}{
-		SYNC_TYPE_BALANCES:     {},
-		SYNC_TYPE_TRANSACTIONS: {},
+	SyncTypes map[SyncType]struct{} = map[SyncType]struct{}{
+		SyncTypeBalances:     {},
+		SyncTypeTransactions: {},
 	}
-	REQUEST_STATUSES map[RequestStatus]struct{} = map[RequestStatus]struct{}{
-		REQUEST_STATUS_CREATED:    {},
-		REQUEST_STATUS_PENDING:    {},
-		REQUEST_STATUS_FAILED:     {},
-		REQUEST_STATUS_SUCCESSFUL: {},
+	RequestStatuses map[RequestStatus]struct{} = map[RequestStatus]struct{}{
+		RequestStatusCreated:    {},
+		RequestStatusPending:    {},
+		RequestStatusFailed:     {},
+		RequestStatusSuccessful: {},
 	}
 )
 
