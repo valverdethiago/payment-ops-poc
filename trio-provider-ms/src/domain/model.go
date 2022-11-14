@@ -40,6 +40,7 @@ type ProviderSyncRequest struct {
 
 type SyncRequest struct {
 	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	OriginalId    string        `bson:"original_id" json:"original_id"`
 	AccountId     string        `bson:"account_id" json:"account_id"`
 	SyncType      SyncType      `bson:"sync_type" json:"sync_type"`
 	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
@@ -48,8 +49,8 @@ type SyncRequest struct {
 }
 
 type SyncRequestResult struct {
-	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
-	RequestStatus RequestStatus `bson:"request_status" json:"RequestStatus"`
+	ID            string        `bson:"_id" json:"id,omitempty" `
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
 	Message       *string       `bson:"message" json:"message"`
 	SentAt        time.Time     `bson:"sent_at" json:"sent_at"`
 }

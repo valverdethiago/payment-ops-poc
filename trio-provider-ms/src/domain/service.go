@@ -1,11 +1,7 @@
 package domain
 
-import (
-	"gopkg.in/mgo.v2/bson"
-)
-
 type EventDispatcher interface {
-	UpdateSyncRequestStatus(id bson.ObjectId, requestStatus RequestStatus, Message *string) error
+	UpdateSyncRequestStatus(id string, requestStatus RequestStatus, Message *string) error
 	TriggerBalanceUpdateEvent(accountId string, balance float64, currency string) error
 	TriggerTransactionsUpdateEvent(accountId string, transactions []Transaction) error
 }

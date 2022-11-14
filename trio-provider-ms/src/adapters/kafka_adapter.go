@@ -29,7 +29,7 @@ func NewEventDispatcherImpl(ctx context.Context, brokers []string, KafkaSyncRequ
 	}
 }
 
-func (dispatcher EventDispatcherImpl) UpdateSyncRequestStatus(id bson.ObjectId,
+func (dispatcher EventDispatcherImpl) UpdateSyncRequestStatus(id string,
 	requestStatus domain.RequestStatus, Message *string) error {
 	requestOutput := domain.SyncRequestResult{
 		ID:            id,

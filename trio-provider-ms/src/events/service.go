@@ -3,7 +3,6 @@ package events
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/domain"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
 	"gopkg.in/mgo.v2/bson"
@@ -38,15 +37,21 @@ func (subscriberService *EventSubscriberServiceImpl) OnReceiveSyncRequest(value 
 	if err != nil {
 		return err
 	}
-	fmt.Println("received at callback: ", value)
-	fmt.Println("received object", providerSyncRequest.ID, providerSyncRequest.AccountId, providerSyncRequest.SyncType)
-	SyncRequest := buildSyncRequest(providerSyncRequest)
+	SyncRequest, err := buildSyncRequest(providerSyncRequest)
+	if err != nil {
+		return err
+	}
+	SyncRequest.RequestStatus = domain.RequestStatusPending
 	SyncRequest, err = subscriberService.persistSyncRequest(SyncRequest)
 	switch SyncRequest.SyncType {
 	case domain.SyncTypeBalances:
-		subscriberService.synchronizeBalances(SyncRequest)
+		err = subscriberService.synchronizeBalances(SyncRequest)
 	case domain.SyncTypeTransactions:
-		subscriberService.synchronizeTransactions(SyncRequest)
+		err = subscriberService.synchronizeTransactions(SyncRequest)
+	}
+	if err != nil {
+		errorMessage := err.Error()
+		subscriberService.syncRequestService.ChangeToFailingStatus(SyncRequest.AccountId, SyncRequest.SyncType, &errorMessage)
 	}
 	return err
 }
@@ -85,20 +90,21 @@ func (subscriberService *EventSubscriberServiceImpl) synchronizeWithTrio(Request
 	return nil
 }
 
-func buildSyncRequest(providerSyncRequest domain.ProviderSyncRequest) *domain.SyncRequest {
+func buildSyncRequest(providerSyncRequest domain.ProviderSyncRequest) (*domain.SyncRequest, error) {
 	AccountId, err := domain.ParseUUID(providerSyncRequest.AccountId)
 	SyncType, err := domain.ParseSyncType(providerSyncRequest.SyncType)
 	if err != nil {
 		log.Println("Unable to parse ProviderSyncRequest")
-		return nil
+		return nil, err
 	}
 	return &domain.SyncRequest{
 		ID:            bson.NewObjectId(),
+		OriginalId:    providerSyncRequest.ID,
 		RequestStatus: domain.RequestStatusCreated,
 		CreatedAt:     time.Now(),
 		SyncType:      SyncType,
 		AccountId:     AccountId.String(),
-	}
+	}, nil
 }
 
 func ParseJson(value string) (domain.ProviderSyncRequest, error) {

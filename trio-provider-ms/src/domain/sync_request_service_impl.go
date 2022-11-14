@@ -38,10 +38,11 @@ func (syncRequestService *SyncRequestServiceImpl) UpdateStatusByAccountIdAndSync
 	if err != nil {
 		return err
 	}
-	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.ID, status, Message)
+	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.OriginalId, status, Message)
 }
 
-func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(internalAccountId string, syncType SyncType,
+func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(internalAccountId string,
+	syncType SyncType,
 	requestStatus RequestStatus, Message *string) error {
 	syncRequest, err := syncRequestService.FindLastRequestByAccountIdAndSyncType(internalAccountId, syncType)
 	if err != nil {
@@ -50,11 +51,16 @@ func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(intern
 	if syncRequest == nil || syncRequest.RequestStatus == requestStatus {
 		return nil
 	}
-	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.ID, requestStatus, Message)
+	syncRequest.RequestStatus = requestStatus
+	syncRequest, err = syncRequestService.syncRequestRepository.Update(syncRequest)
+	if err != nil {
+		return err
+	}
+	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.OriginalId, requestStatus, Message)
 }
 
-func (syncRequestService *SyncRequestServiceImpl) ChangeToFailingStatus(internalAccountId string, syncType SyncType, Message *string) error {
-	syncRequestService.FindLastRequestByAccountIdAndSyncType(internalAccountId, syncType)
+func (syncRequestService *SyncRequestServiceImpl) ChangeToFailingStatus(internalAccountId string,
+	syncType SyncType, Message *string) error {
 	return syncRequestService.UpdateSyncRequestStatus(internalAccountId, syncType, RequestStatusFailed, Message)
 }
 
