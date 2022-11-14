@@ -22,9 +22,9 @@ type Controller interface {
 }
 
 // NewServer creates a new server instance
-func NewServer(router *gin.Engine, config *config.Config) *Server {
+func NewServer(config *config.Config) *Server {
 	server := &Server{
-		Router: router,
+		Router: gin.Default(),
 		config: config,
 	}
 	server.ConfigureLogging()

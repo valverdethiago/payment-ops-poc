@@ -1,8 +1,8 @@
 services:
   sync-manager-db:
     image: mongo
-    container_name: mongo
-    hostname: mongo
+    container_name: sync-manager-db
+    hostname: sync-manager-db
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -12,19 +12,52 @@ services:
     volumes: 
       - sync-manager_data:/data/db
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
 
   sync-manager-db-ui:
     image: mongo-express
-    container_name: mongo-express
-    hostname: mongo-express
+    container_name: sync-manager-db-ui
+    hostname: sync-manager-db-ui
     restart: unless-stopped
     ports:
-      - "8888:8081"
+      - "8880:8081"
+    environment:      
+      ME_CONFIG_MONGODB_SERVER: sync-manager-db
     links:
       - sync-manager-db
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
+
+  bank-transactional-db:
+    image: postgres:10-alpine
+    container_name: bank-transactional-db
+    hostname: bank-transactional-db
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    volumes:
+        - bank-transactional_data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: bank_transactional_db
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    networks:
+      - payment-ops-poc-network
+
+  bank-transactional-ui:
+    image: dpage/pgadmin4
+    container_name: bank-transactional-ui
+    hostname: bank-transactional-ui
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "thiago@pauca.co"
+      PGADMIN_DEFAULT_PASSWORD: "Pauca!2022"
+    ports:
+      - "8881:80"
+    links:
+      - bank-transactional-db
+    networks:
+      - payment-ops-poc-network
 
   zoo:
     image: zookeeper:3.4.9
@@ -41,7 +74,7 @@ services:
       - zoo-data-volume:/data
       - zoo-datalog-volume:/datalog
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
 
   kafka:
     image: confluentinc/cp-kafka:5.3.1
@@ -63,7 +96,7 @@ services:
     depends_on:
       - zoo
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
 
   # This "container" is a workaround to pre-create topics
   kafka-setup:
@@ -85,7 +118,7 @@ services:
       KAFKA_BROKER_ID: ignored
       KAFKA_ZOOKEEPER_CONNECT: ignored
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
 
   kafka-ui:
     image: obsidiandynamics/kafdrop
@@ -100,7 +133,7 @@ services:
       - kafka
       - zoo
     networks:
-      - sync-manager-network
+      - payment-ops-poc-network
 
 volumes:
   kafka-volume:
@@ -114,8 +147,9 @@ volumes:
   kafka-setup-dashboard-volume:
     external: false
   sync-manager_data:
+  bank-transactional_data: 
 
 
 networks: 
-    sync-manager-network:
+    payment-ops-poc-network:
       driver: bridge

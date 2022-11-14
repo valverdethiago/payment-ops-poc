@@ -17,8 +17,8 @@ type requestId struct {
 }
 
 type newSyncRequest struct {
-	AccountId string `uri:"accountId" binding: "required"`
-	SyncType  string `uri:"syncType" binding: "required"`
+	AccountId string   `uri:"accountId" binding: "required"`
+	SyncType  SyncType `uri:"syncType" binding: "required"`
 }
 
 type SyncRequestController struct {
@@ -53,7 +53,11 @@ func (controller *SyncRequestController) NewRequest(ctx *gin.Context) {
 	}
 	created, err := controller.service.Request(req.AccountId, req.SyncType)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		if err == ErrorInvalidValueForSyncType {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		}
 	}
 	ctx.JSON(http.StatusOK, created)
 }

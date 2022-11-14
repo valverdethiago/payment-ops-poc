@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	errs "github.com/pkg/errors"
-
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
@@ -34,28 +32,24 @@ func (service *syncRequestService) Find(id string) (*SyncRequest, error) {
 	return service.syncRequestRepository.Find(id)
 }
 
-func (service *syncRequestService) Request(AccountId string, SyncType string) (*SyncRequest, error) {
-	requests, err := service.syncRequestRepository.FindPendingRequests(AccountId, SyncType)
+func (service *syncRequestService) Request(AccountId string, Type SyncType) (*SyncRequest, error) {
+	requests, err := service.syncRequestRepository.FindPendingRequests(AccountId, Type)
 	if err != nil || (requests != nil && len(requests) > 0) {
 		if err == mgo.ErrNotFound {
-			return service.createSyncRequest(AccountId, SyncType)
+			return service.createSyncRequest(AccountId, Type)
 		}
 		return &requests[0], err
 	}
-	return service.createSyncRequest(AccountId, SyncType)
+	return service.createSyncRequest(AccountId, Type)
 }
 
-func (service *syncRequestService) createSyncRequest(AccountId string, SynchronizationType string) (*SyncRequest, error) {
-	sync_type, err := ScanSyncType(SynchronizationType)
-	if err != nil {
-		return nil, errs.Wrap(ErrorInvalidValueForSyncType, "service.Redirect.Store")
-	}
+func (service *syncRequestService) createSyncRequest(AccountId string, Type SyncType) (_ *SyncRequest, err error) {
 
 	request := &SyncRequest{
 		ID:            bson.NewObjectId(),
 		RequestStatus: REQUEST_STATUS_CREATED,
 		CreatedAt:     time.Now().Unix(),
-		SyncType:      *sync_type,
+		SyncType:      Type,
 		AccountId:     AccountId,
 	}
 	entity, err := service.syncRequestRepository.Store(request)
