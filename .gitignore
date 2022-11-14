@@ -16,3 +16,5 @@
 .vscode/launch.json
 __debug_bin
 .DS_Store
+**/bin/*
+**/obj/*
