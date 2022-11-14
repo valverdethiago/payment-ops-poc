@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
 )
 
@@ -17,8 +18,8 @@ type requestId struct {
 }
 
 type newSyncRequest struct {
-	AccountId string   `uri:"accountId" binding: "required"`
-	SyncType  SyncType `uri:"syncType" binding: "required,enum"`
+	AccountId uuid.UUID `uri:"accountId" binding: "required"`
+	SyncType  SyncType  `uri:"syncType" binding: "required,enum"`
 }
 
 type SyncRequestController struct {

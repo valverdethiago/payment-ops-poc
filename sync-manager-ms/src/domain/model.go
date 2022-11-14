@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -16,10 +17,21 @@ const (
 	REQIEST_STATUS_SUCCESSFUL RequestStatus = "SUCCESSFUL"
 )
 
+type ProviderSyncRequest struct {
+	AccountId uuid.UUID `json: "AccountId"`
+	SyncType  SyncType  `json: "SyncType"`
+}
+
 type SyncRequest struct {
 	ID            bson.ObjectId `json:"id,omitempty" `
-	AccountId     string        `json: "AccountId"`
+	AccountId     uuid.UUID     `json: "AccountId"`
 	SyncType      SyncType      `json: "SyncType"`
 	RequestStatus RequestStatus `json: "RequestStatus"`
 	CreatedAt     int64         `json: "CreatedAt"`
+}
+
+type SyncRequestResult struct {
+	ID            bson.ObjectId `json:"id,omitempty" `
+	RequestStatus RequestStatus `json: "RequestStatus"`
+	Message       string        `json: "Message"`
 }
