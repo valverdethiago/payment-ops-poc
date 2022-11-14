@@ -39,6 +39,12 @@ type SyncRequest struct {
 	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }
 
+type BalanceUpdateEvent struct {
+	AccountID string  `json:"AccountID"`
+	Balance   float64 `json:"Balance"`
+	Currency  string  `json:"Currency"`
+}
+
 type SyncRequestResult struct {
 	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
 	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`

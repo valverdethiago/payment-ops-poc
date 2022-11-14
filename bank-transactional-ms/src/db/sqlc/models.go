@@ -66,6 +66,14 @@ type AccountActivity struct {
 	DateTime            sql.NullTime        `json:"date_time"`
 }
 
+type AccountBalance struct {
+	AccountBalanceUuid uuid.UUID    `json:"account_balance_uuid"`
+	AccountUuid        uuid.UUID    `json:"account_uuid"`
+	Amount             string       `json:"amount"`
+	Currency           string       `json:"currency"`
+	DateTime           sql.NullTime `json:"date_time"`
+}
+
 type Bank struct {
 	BankUuid    uuid.UUID `json:"bank_uuid"`
 	Code        string    `json:"code"`

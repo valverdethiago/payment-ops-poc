@@ -14,7 +14,7 @@ import (
 type OnMessageReceive func(string) error
 
 type EventSubscriberService interface {
-	OnMessageReceive(value string) error
+	OnReceiveSyncRequest(value string) error
 }
 
 type EventSubscriberServiceImpl struct {
@@ -33,7 +33,7 @@ func NewEventSubscriberServiceImpl(syncRequestService domain.SyncRequestService,
 	}
 }
 
-func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value string) error {
+func (subscriberService *EventSubscriberServiceImpl) OnReceiveSyncRequest(value string) error {
 	providerSyncRequest, err := ParseJson(value)
 	if err != nil {
 		return err

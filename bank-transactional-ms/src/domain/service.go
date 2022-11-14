@@ -11,6 +11,12 @@ type AccountService interface {
 	IsAccountInValidState(account *db.Account) bool
 }
 
+type AccountBalanceService interface {
+	FindAllBalancesByAccount(accountId uuid.UUID) (*[]db.AccountBalance, error)
+	FindCurrentBalanceByAccount(accountId uuid.UUID) (*db.AccountBalance, error)
+	UpdateAccountBalance(accountId uuid.UUID, amount float64, currency string) (*db.AccountBalance, error)
+}
+
 type SyncRequestService interface {
 	UpdateSyncRequestStatus(id bson.ObjectId, requestStatus RequestStatus, Message *string)
 	ChangeToFailingStatus(ID bson.ObjectId, Message string)

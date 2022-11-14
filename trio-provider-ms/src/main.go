@@ -127,7 +127,7 @@ func configureConsumer(ctx context.Context, config *config.Config,
 	eventSubscriberService events.EventSubscriberService) *infra.Consumer {
 	consumer := infra.NewConsumer(ctx, []string{config.KafkaBroker},
 		config.SyncRequestInputTopic, config.KafkaClientId)
-	go consumer.StartReading(eventSubscriberService.OnMessageReceive)
+	go consumer.StartReading(eventSubscriberService.OnReceiveSyncRequest)
 	return consumer
 }
 

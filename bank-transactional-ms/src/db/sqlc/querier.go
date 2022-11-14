@@ -12,6 +12,8 @@ import (
 
 type Querier interface {
 	FindAccountStatuses(ctx context.Context, accountUuid uuid.UUID) (FindAccountStatusesRow, error)
+	FindAllBalancesByAccount(ctx context.Context, accountUuid uuid.UUID) ([]AccountBalance, error)
+	FindCurrentBalanceByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountBalance, error)
 	FindLastActivityByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 	GetAccountByID(ctx context.Context, accountUuid uuid.UUID) (Account, error)
 	GetBankByID(ctx context.Context, bankUuid uuid.UUID) (Bank, error)
@@ -19,6 +21,7 @@ type Querier interface {
 	GetConfigurationByID(ctx context.Context, configurationUuid uuid.UUID) (Configuration, error)
 	GetFullAccountInfoByID(ctx context.Context, accountUuid uuid.UUID) (GetFullAccountInfoByIDRow, error)
 	IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
+	UpdateAccountBalance(ctx context.Context, arg UpdateAccountBalanceParams) (AccountBalance, error)
 }
 
 var _ Querier = (*Queries)(nil)

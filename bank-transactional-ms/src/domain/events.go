@@ -11,7 +11,9 @@ import (
 type OnMessageReceive func(string) error
 
 type EventSubscriberService interface {
-	OnMessageReceive(value string) error
+	OnReceiveSyncRequest(value string) error
+	OnReceiveBalanceUpdate(value string) error
+	OnReceiveTransactionsUpdate(value string) error
 }
 
 type EventDispatcher interface {
@@ -20,24 +22,25 @@ type EventDispatcher interface {
 }
 
 type EventSubscriberServiceImpl struct {
-	accountService     AccountService
-	syncRequestService SyncRequestService
+	accountService        AccountService
+	accountBalanceService AccountBalanceService
+	syncRequestService    SyncRequestService
 }
 
-func NewEventSubscriberServiceImpl(accountService AccountService, syncRequestService SyncRequestService) EventSubscriberService {
+func NewEventSubscriberServiceImpl(accountService AccountService, accountBalanceService AccountBalanceService,
+	syncRequestService SyncRequestService) EventSubscriberService {
 	return &EventSubscriberServiceImpl{
-		accountService:     accountService,
-		syncRequestService: syncRequestService,
+		accountService:        accountService,
+		accountBalanceService: accountBalanceService,
+		syncRequestService:    syncRequestService,
 	}
 }
 
-func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value string) error {
-	syncRequest, err := ParseJson(value)
+func (subscriberService *EventSubscriberServiceImpl) OnReceiveSyncRequest(value string) error {
+	syncRequest, err := ParseSyncRequestJson(value)
 	if err != nil {
 		return err
 	}
-	fmt.Println("received at callback: ", value)
-	fmt.Println("received object", syncRequest.ID, syncRequest.AccountId, syncRequest.SyncType)
 	ID := parseBson(syncRequest.ID)
 	AccountID, err := parseUUID(syncRequest.AccountId)
 	if err != nil {
@@ -64,9 +67,39 @@ func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value stri
 	return subscriberService.syncRequestService.RequestProviderSync(configuration.KafkaInputTopicName, providerSyncRequest)
 }
 
-func ParseJson(value string) (SyncRequest, error) {
+func (subscriberService *EventSubscriberServiceImpl) OnReceiveBalanceUpdate(value string) error {
+	payload, err := ParseBalanceUpdateEventJson(value)
+	if err != nil {
+		return err
+	}
+	AccountID, err := parseUUID(payload.AccountID)
+	if err != nil {
+		return err
+	}
+	account, _, _, err := subscriberService.accountService.FindAccountInformation(AccountID)
+	if err != nil {
+		return err
+	}
+	if !subscriberService.accountService.IsAccountInValidState(account) {
+		return errors.New(fmt.Sprintf("Account %s is in invalid state", AccountID))
+	}
+	_, err = subscriberService.accountBalanceService.UpdateAccountBalance(AccountID, payload.Balance, payload.Currency)
+	return err
+}
+
+func (subscriberService *EventSubscriberServiceImpl) OnReceiveTransactionsUpdate(value string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func ParseSyncRequestJson(value string) (SyncRequest, error) {
 	syncRequest := SyncRequest{}
 	err := json.Unmarshal([]byte(value), &syncRequest)
 	return syncRequest, err
+}
 
+func ParseBalanceUpdateEventJson(value string) (BalanceUpdateEvent, error) {
+	event := BalanceUpdateEvent{}
+	err := json.Unmarshal([]byte(value), &event)
+	return event, err
 }
