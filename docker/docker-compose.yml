@@ -23,6 +23,8 @@ services:
       - "8880:8081"
     environment:      
       ME_CONFIG_MONGODB_SERVER: sync-manager-db
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: pass
     links:
       - sync-manager-db
     networks:
@@ -113,7 +115,8 @@ services:
     hostname: kafka
     container_name: kafka
     ports:
-      - "9092:9092"
+      - 9092:9092
+      - 9997:9997
     environment:
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
@@ -122,6 +125,8 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote.rmi.port=9997
     volumes:
       - kafka-volume:/var/lib/kafka/data
     depends_on:
@@ -158,14 +163,21 @@ services:
       - payment-ops-poc-network
 
   kafka-ui:
-    image: obsidiandynamics/kafdrop
+    image: provectuslabs/kafka-ui
     restart: unless-stopped
     hostname: kafka-ui
     container_name: kafka-ui
     ports:
-      - "9000:9000"
+      - 9000:8080
     environment:
-      KAFKA_BROKERCONNECT: kafka:19092
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zoo:2181
+      KAFKA_CLUSTERS_0_JMXPORT: 9997
+      SERVER_SERVLET_CONTEXT_PATH: /kafkaui
+      AUTH_TYPE: "LOGIN_FORM"
+      SPRING_SECURITY_USER_NAME: admin
+      SPRING_SECURITY_USER_PASSWORD: pass
     depends_on:
       - kafka
       - zoo
