@@ -3,7 +3,6 @@ package domain
 import (
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/mgo.v2/bson"
 	"net/http"
 )
 
@@ -16,17 +15,19 @@ type WebHookInput struct {
 }
 
 type WebHookController struct {
-	SyncRequestService SyncRequestService
-	BalanceService     BalanceService
-	TransactionService TransactionService
+	syncRequestService SyncRequestService
+	balanceService     BalanceService
+	transactionService TransactionService
+	accountRepository  AccountRepository
 }
 
-func NewWebHookControllerImpl(SyncRequestService SyncRequestService, BalanceService BalanceService,
-	TransactionService TransactionService) *WebHookController {
+func NewWebHookControllerImpl(syncRequestService SyncRequestService, balanceService BalanceService,
+	transactionService TransactionService, accountRepository AccountRepository) *WebHookController {
 	return &WebHookController{
-		SyncRequestService: SyncRequestService,
-		BalanceService:     BalanceService,
-		TransactionService: TransactionService,
+		syncRequestService: syncRequestService,
+		balanceService:     balanceService,
+		transactionService: transactionService,
+		accountRepository:  accountRepository,
 	}
 }
 
@@ -41,38 +42,65 @@ func (controller *WebHookController) WebhookCall(ctx *gin.Context) {
 	}
 	switch input.SyncType {
 	case SyncTypeBalances:
-		controller.HandleBalancesCallback(ctx)
+		controller.handleBalancesCallback(ctx)
 	case SyncTypeTransactions:
-		controller.HandleTransactionsCallback(ctx)
+		controller.handleTransactionsCallback(ctx)
 	}
-	ctx.Status(http.StatusOK)
 }
 
-func (controller *WebHookController) HandleBalancesCallback(ctx *gin.Context) {
+func (controller *WebHookController) handleBalancesCallback(ctx *gin.Context) {
 	payload, err := ParseBalancesWebHookPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	account, err := controller.findAccount(payload.Event.AccountID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
 	if payload.Error != nil && payload.Error.Message != nil {
-		controller.SyncRequestService.ChangeToFailingStatus(bson.ObjectIdHex(payload.Event.AccountID),
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": payload.Error.Message})
+		controller.syncRequestService.ChangeToFailingStatus(account.InternalAccountId, SyncTypeBalances,
 			payload.Error.Message)
 	}
-	controller.BalanceService.UpdateAccountBalance(payload.Event.AccountID, payload.Data.Amount.Amount,
+	err = controller.balanceService.UpdateAccountBalance(payload.Event.AccountID, payload.Data.Amount.Amount,
 		payload.Data.Amount.Currency)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	controller.syncRequestService.ChangeToSuccessfulStatus(account.InternalAccountId, SyncTypeBalances)
+	ctx.Status(http.StatusOK)
 
 }
 
-func (controller *WebHookController) HandleTransactionsCallback(ctx *gin.Context) {
+func (controller *WebHookController) handleTransactionsCallback(ctx *gin.Context) {
 	payload, err := ParseTransactionsWebHookPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if payload.Error != nil && payload.Error.Message != nil {
-		controller.SyncRequestService.ChangeToFailingStatus(bson.ObjectIdHex(payload.Event.AccountID), payload.Error.Message)
+	account, err := controller.findAccount(payload.Event.AccountID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
 	}
-	controller.TransactionService.UpdateAccountTransactions(payload.Event.AccountID)
+	if payload.Error != nil && payload.Error.Message != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": payload.Error.Message})
+		controller.syncRequestService.ChangeToFailingStatus(account.InternalAccountId, SyncTypeTransactions,
+			payload.Error.Message)
+	}
+	err = controller.transactionService.UpdateAccountTransactions(payload.Event.AccountID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusOK)
+}
+
+func (controller *WebHookController) findAccount(id string) (*Account, error) {
+	return controller.accountRepository.FindByProviderAccountId(id)
 }
 
 func ParseWebHookInput(ctx *gin.Context) (*WebHookInput, error) {

@@ -1,22 +1,22 @@
 package domain
 
 import (
-	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type SyncRequestRepository interface {
 	Find(id bson.ObjectId) (*SyncRequest, error)
-	FindPendingRequests(AccountId uuid.UUID, Type SyncType) ([]SyncRequest, error)
+	FindPendingRequests(internalAccountId string, Type SyncType) ([]SyncRequest, error)
+	FindLastRequest(internalAccountId string, Type SyncType) (*SyncRequest, error)
 	Insert(Request *SyncRequest) (*SyncRequest, error)
 	Update(Request *SyncRequest) (*SyncRequest, error)
-	FindPendingRequestByAccountIdAndSyncType(accountId uuid.UUID, syncType SyncType) (*SyncRequest, error)
+	FindPendingRequestByAccountIdAndSyncType(accountId string, syncType SyncType) (*SyncRequest, error)
 }
 
 type AccountRepository interface {
 	Find(id bson.ObjectId) (*Account, error)
-	FindByInternalAccountId(accountId string) (*Account, error)
-	FindByProviderAccountId(accountId string) (*Account, error)
+	FindByInternalAccountId(internalAccountId string) (*Account, error)
+	FindByProviderAccountId(providerAccountId string) (*Account, error)
 	Insert(account *Account) (*Account, error)
 	Update(account *Account) (*Account, error)
 }

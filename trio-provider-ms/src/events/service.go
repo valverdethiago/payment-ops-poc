@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/domain"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
@@ -17,21 +18,18 @@ type EventSubscriberService interface {
 }
 
 type EventSubscriberServiceImpl struct {
-	syncRequestRepository domain.SyncRequestRepository
-	accountRepository     domain.AccountRepository
-	trioClient            domain.TrioClient
-	eventDispatcher       domain.EventDispatcher
+	syncRequestService domain.SyncRequestService
+	accountRepository  domain.AccountRepository
+	trioClient         domain.TrioClient
 }
 
-func NewEventSubscriberServiceImpl(syncRequestRepository domain.SyncRequestRepository,
+func NewEventSubscriberServiceImpl(syncRequestService domain.SyncRequestService,
 	accountRepository domain.AccountRepository,
-	trioClient domain.TrioClient,
-	dispatcher domain.EventDispatcher) EventSubscriberService {
+	trioClient domain.TrioClient) EventSubscriberService {
 	return &EventSubscriberServiceImpl{
-		syncRequestRepository: syncRequestRepository,
-		accountRepository:     accountRepository,
-		trioClient:            trioClient,
-		eventDispatcher:       dispatcher,
+		syncRequestService: syncRequestService,
+		accountRepository:  accountRepository,
+		trioClient:         trioClient,
 	}
 }
 
@@ -54,44 +52,37 @@ func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value stri
 }
 
 func (subscriberService *EventSubscriberServiceImpl) persistSyncRequest(syncRequest *domain.SyncRequest) (*domain.SyncRequest, error) {
-	return subscriberService.syncRequestRepository.Insert(syncRequest)
+	return subscriberService.syncRequestService.Insert(syncRequest)
 }
 
-func (subscriberService *EventSubscriberServiceImpl) updateSyncRequestStatus(ID bson.ObjectId, Status domain.RequestStatus, Message *string) (*domain.SyncRequest, error) {
-	syncRequest, err := subscriberService.syncRequestRepository.Find(ID)
-	if err != nil {
-		return nil, err
-	}
-	syncRequest.RequestStatus = Status
-	syncRequest.ErrorMessage = Message
-	subscriberService.eventDispatcher.UpdateSyncRequestStatus(ID, Status, Message)
-	return subscriberService.syncRequestRepository.Update(syncRequest)
+func (subscriberService *EventSubscriberServiceImpl) synchronizeBalances(Request *domain.SyncRequest) error {
+	return subscriberService.synchronizeWithTrio(Request, subscriberService.trioClient.FetchBalancesFromBank)
 }
 
-func (subscriberService *EventSubscriberServiceImpl) synchronizeBalances(Request *domain.SyncRequest) {
-	subscriberService.synchronizeWithTrio(Request, subscriberService.trioClient.FetchBalancesFromBank)
+func (subscriberService *EventSubscriberServiceImpl) synchronizeTransactions(Request *domain.SyncRequest) error {
+	return subscriberService.synchronizeWithTrio(Request, subscriberService.trioClient.FetchTransactionsFromBank)
 }
 
-func (subscriberService *EventSubscriberServiceImpl) synchronizeTransactions(Request *domain.SyncRequest) {
-	subscriberService.synchronizeWithTrio(Request, subscriberService.trioClient.FetchTransactionsFromBank)
-}
-
-func (subscriberService *EventSubscriberServiceImpl) synchronizeWithTrio(Request *domain.SyncRequest, FetchFunction domain.FetchData) {
-	subscriberService.updateSyncRequestStatus(Request.ID, domain.RequestStatusPending, nil)
+func (subscriberService *EventSubscriberServiceImpl) synchronizeWithTrio(Request *domain.SyncRequest, FetchFunction domain.FetchData) error {
 	account, err := subscriberService.accountRepository.FindByInternalAccountId(Request.AccountId)
 	if err != nil {
-		errorMessage := fmt.Sprintf("Invalid account id %s", Request.AccountId)
-		subscriberService.updateSyncRequestStatus(Request.ID, domain.RequestStatusPending, &errorMessage)
+		return errors.New("invalid account id")
 	}
 	response, err := FetchFunction(*account)
 	if err != nil {
-		subscriberService.updateSyncRequestStatus(Request.ID, domain.RequestStatusPending, nil)
+		errorMessage := err.Error()
+		subscriberService.syncRequestService.UpdateSyncRequestStatus(Request.AccountId, Request.SyncType,
+			domain.RequestStatusFailed, &errorMessage)
+		return err
 	}
 	if response.Data.Status == string(restclient.FailedFetchRequestStatus) {
-		subscriberService.updateSyncRequestStatus(Request.ID, domain.RequestStatusFailed, nil)
-
+		subscriberService.syncRequestService.UpdateSyncRequestStatus(Request.AccountId, Request.SyncType,
+			domain.RequestStatusFailed, nil)
+		return errors.New("fetch operation failed")
 	}
-	subscriberService.updateSyncRequestStatus(Request.ID, domain.RequestStatusPending, nil)
+	subscriberService.syncRequestService.UpdateSyncRequestStatus(Request.AccountId, Request.SyncType,
+		domain.RequestStatusPending, nil)
+	return nil
 }
 
 func buildSyncRequest(providerSyncRequest domain.ProviderSyncRequest) *domain.SyncRequest {
@@ -104,7 +95,7 @@ func buildSyncRequest(providerSyncRequest domain.ProviderSyncRequest) *domain.Sy
 	return &domain.SyncRequest{
 		ID:            bson.NewObjectId(),
 		RequestStatus: domain.RequestStatusCreated,
-		CreatedAt:     time.Now().Unix(),
+		CreatedAt:     time.Now(),
 		SyncType:      SyncType,
 		AccountId:     AccountId.String(),
 	}

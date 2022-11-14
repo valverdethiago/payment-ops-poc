@@ -3,52 +3,53 @@ package domain
 import (
 	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type SyncType string
 type RequestStatus string
 
 const (
-	SYNC_TYPE_BALANCES        SyncType      = "BALANCES"
-	SYNC_TYPE_TRANSACTIONS    SyncType      = "TRANSACTIONS"
-	REQUEST_STATUS_CREATED    RequestStatus = "CREATED"
-	REQUEST_STATUS_PENDING    RequestStatus = "PENDING"
-	REQUEST_STATUS_FAILED     RequestStatus = "FAILED"
-	REQUEST_STATUS_SUCCESSFUL RequestStatus = "SUCCESSFUL"
+	SyncTypeBalances        SyncType      = "BALANCES"
+	SyncTypeTransactions    SyncType      = "TRANSACTIONS"
+	RequestStatusCreated    RequestStatus = "CREATED"
+	RequestStatusPending    RequestStatus = "PENDING"
+	RequestStatusFailed     RequestStatus = "FAILED"
+	RequestStatusSuccessful RequestStatus = "SUCCESSFUL"
 )
 
 var (
-	SYNC_TYPES map[SyncType]struct{} = map[SyncType]struct{}{
-		SYNC_TYPE_BALANCES:     {},
-		SYNC_TYPE_TRANSACTIONS: {},
+	SyncTypes map[SyncType]struct{} = map[SyncType]struct{}{
+		SyncTypeBalances:     {},
+		SyncTypeTransactions: {},
 	}
-	REQUEST_STATUSES map[RequestStatus]struct{} = map[RequestStatus]struct{}{
-		REQUEST_STATUS_CREATED:    {},
-		REQUEST_STATUS_PENDING:    {},
-		REQUEST_STATUS_FAILED:     {},
-		REQUEST_STATUS_SUCCESSFUL: {},
+	RequestStatuses map[RequestStatus]struct{} = map[RequestStatus]struct{}{
+		RequestStatusCreated:    {},
+		RequestStatusPending:    {},
+		RequestStatusFailed:     {},
+		RequestStatusSuccessful: {},
 	}
 )
 
 type SyncRequest struct {
-	ID            string        `json:"id,omitempty" `
-	AccountId     string        `json:"AccountId"`
-	SyncType      SyncType      `json:"SyncType"`
-	RequestStatus RequestStatus `json:"RequestStatus"`
-	CreatedAt     int64         `json:"CreatedAt"`
+	ID            string        `bson:"_id" json:"id,omitempty" `
+	AccountId     string        `bson:"account_id" json:"account_id"`
+	SyncType      SyncType      `bson:"sync_type" json:"sync_type"`
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type SyncRequestResult struct {
-	ID            bson.ObjectId `json:"id,omitempty" `
-	RequestStatus RequestStatus `json:"RequestStatus"`
-	Message       *string       `json:"Message"`
-	SentAt        int64         `json:"CreatedAt"`
+	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	Message       *string       `bson:"message" json:"message"`
+	SentAt        time.Time     `bson:"sent_at" json:"sent_at"`
 }
 
 type ProviderSyncRequest struct {
-	ID            bson.ObjectId `json:"id,omitempty" `
-	AccountId     uuid.UUID     `json:"AccountId"`
-	SyncType      SyncType      `json:"SyncType"`
-	RequestStatus RequestStatus `json:"RequestStatus"`
-	CreatedAt     int64         `json:"CreatedAt"`
+	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	AccountId     uuid.UUID     `bson:"account_id" json:"account_id"`
+	SyncType      SyncType      `bson:"sync_type" json:"sync_type"`
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }

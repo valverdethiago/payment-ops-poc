@@ -37,11 +37,11 @@ func (store *MongoDbStore) Find(ID bson.ObjectId) (*domain.SyncRequest, error) {
 func (store *MongoDbStore) FindPendingRequests(AccountId uuid.UUID, Type *domain.SyncType) ([]domain.SyncRequest, error) {
 	var syncRequest []domain.SyncRequest
 	filter := bson.D{
-		{"accountid", AccountId},
-		{"synctype", Type},
+		{"account_id", AccountId},
+		{"sync_type", Type},
 		{"$or", []interface{}{
-			bson.D{{"requeststatus", "PENDING"}},
-			bson.D{{"requeststatus", "CREATED"}},
+			bson.D{{"request_status", "PENDING"}},
+			bson.D{{"request_status", "CREATED"}},
 		}},
 	}
 	err := store.collection.Find(filter).All(&syncRequest)

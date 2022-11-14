@@ -1,6 +1,8 @@
 package domain
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"gopkg.in/mgo.v2/bson"
+)
 
 type EventDispatcher interface {
 	UpdateSyncRequestStatus(id bson.ObjectId, requestStatus RequestStatus, Message *string) error
@@ -9,10 +11,13 @@ type EventDispatcher interface {
 }
 
 type SyncRequestService interface {
-	UpdateSyncRequestStatus(ID bson.ObjectId, requestStatus RequestStatus, Message *string) error
-	ChangeToFailingStatus(ID bson.ObjectId, Message *string) error
-	ChangeToPendingStatus(ID bson.ObjectId) error
-	ChangeToSuccessfulStatus(ID bson.ObjectId) error
+	Insert(Request *SyncRequest) (*SyncRequest, error)
+	FindLastRequestByAccountIdAndSyncType(internalAccountId string, syncType SyncType) (*SyncRequest, error)
+	UpdateStatusByAccountIdAndSyncType(internalAccountId string, syncType SyncType, status RequestStatus, Message *string) error
+	UpdateSyncRequestStatus(internalAccountId string, syncType SyncType, requestStatus RequestStatus, Message *string) error
+	ChangeToFailingStatus(internalAccountId string, syncType SyncType, Message *string) error
+	ChangeToPendingStatus(internalAccountId string, syncType SyncType) error
+	ChangeToSuccessfulStatus(internalAccountId string, syncType SyncType) error
 }
 
 type BalanceService interface {

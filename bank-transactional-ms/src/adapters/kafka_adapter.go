@@ -29,7 +29,7 @@ func (dispatcher *EventDispatcherImpl) UpdateSyncRequestStatus(id bson.ObjectId,
 		ID:            id,
 		RequestStatus: requestStatus,
 		Message:       Message,
-		SentAt:        time.Now().Unix(),
+		SentAt:        time.Now(),
 	}
 	jsonString, err := json.Marshal(requestOutput)
 	if err != nil {

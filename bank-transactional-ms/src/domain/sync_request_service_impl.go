@@ -18,15 +18,15 @@ func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(id bso
 	syncRequestService.eventDispatcher.UpdateSyncRequestStatus(id, requestStatus, Message)
 }
 func (syncRequestService *SyncRequestServiceImpl) ChangeToFailingStatus(ID bson.ObjectId, Message string) {
-	syncRequestService.UpdateSyncRequestStatus(ID, REQUEST_STATUS_FAILED, &Message)
+	syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusFailed, &Message)
 }
 
 func (syncRequestService *SyncRequestServiceImpl) ChangeToPendingStatus(ID bson.ObjectId) {
-	syncRequestService.UpdateSyncRequestStatus(ID, REQUEST_STATUS_PENDING, nil)
+	syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusPending, nil)
 }
 
 func (syncRequestService *SyncRequestServiceImpl) ChangeToSuccessfulStatus(ID bson.ObjectId) {
-	syncRequestService.UpdateSyncRequestStatus(ID, REQUEST_STATUS_SUCCESSFUL, nil)
+	syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusSuccessful, nil)
 }
 
 func (syncRequestService *SyncRequestServiceImpl) RequestProviderSync(topic string, request ProviderSyncRequest) error {

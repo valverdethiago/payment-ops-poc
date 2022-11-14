@@ -58,8 +58,8 @@ func (subscriberService *EventSubscriberServiceImpl) OnMessageReceive(value stri
 		ID:            ID,
 		AccountId:     AccountID,
 		SyncType:      syncRequest.SyncType,
-		RequestStatus: REQUEST_STATUS_CREATED,
-		CreatedAt:     time.Now().Unix(),
+		RequestStatus: RequestStatusCreated,
+		CreatedAt:     time.Now(),
 	}
 	return subscriberService.syncRequestService.RequestProviderSync(configuration.KafkaInputTopicName, providerSyncRequest)
 }

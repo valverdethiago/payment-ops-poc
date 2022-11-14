@@ -3,6 +3,7 @@ package domain
 import (
 	"github.com/google/uuid"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type SyncType string
@@ -18,11 +19,11 @@ const (
 )
 
 var (
-	SyncTypes map[SyncType]struct{} = map[SyncType]struct{}{
+	SyncTypes = map[SyncType]struct{}{
 		SyncTypeBalances:     {},
 		SyncTypeTransactions: {},
 	}
-	RequestStatuses map[RequestStatus]struct{} = map[RequestStatus]struct{}{
+	RequestStatuses = map[RequestStatus]struct{}{
 		RequestStatusCreated:    {},
 		RequestStatusPending:    {},
 		RequestStatusFailed:     {},
@@ -31,20 +32,20 @@ var (
 )
 
 type ProviderSyncRequest struct {
-	AccountId uuid.UUID `json:"AccountId"`
-	SyncType  SyncType  `json:"SyncType"`
+	AccountId uuid.UUID `bson:"account_id" json:"account_id"`
+	SyncType  SyncType  `bson:"sync_type" json:"sync_type"`
 }
 
 type SyncRequest struct {
 	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
-	AccountId     string        `json:"AccountId"`
-	SyncType      *SyncType     `json:"SyncType"`
-	RequestStatus RequestStatus `json:"RequestStatus"`
-	CreatedAt     int64         `json:"CreatedAt"`
+	AccountId     string        `bson:"account_id" json:"account_id"`
+	SyncType      *SyncType     `bson:"sync_type" json:"sync_type"`
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	CreatedAt     time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type SyncRequestResult struct {
-	ID            bson.ObjectId `json:"id,omitempty" `
-	RequestStatus RequestStatus `json:"RequestStatus"`
-	Message       string        `json:"Message"`
+	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
+	Message       string        `bson:"message" json:"message"`
 }

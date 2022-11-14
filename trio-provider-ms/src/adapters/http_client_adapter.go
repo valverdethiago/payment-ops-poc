@@ -120,7 +120,7 @@ func (trioHttpClientImpl *TrioHttpClientImpl) FetchTransactionsFromBank(account 
 	}
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
-	var responseObj *restclient.FetchRequestResponse
+	responseObj := &restclient.FetchRequestResponse{}
 	err = json.Unmarshal(bodyBytes, responseObj)
 	if err != nil {
 		return nil, err

@@ -25,7 +25,7 @@ func parseBson(ID string) bson.ObjectId {
 
 func parseSyncType(Type string) (*SyncType, error) {
 	result := SyncType(Type)
-	_, ok := SYNC_TYPES[result]
+	_, ok := SyncTypes[result]
 	if !ok {
 		return nil, fmt.Errorf(`cannot parse:[%s] as SyncType`, Type)
 	}

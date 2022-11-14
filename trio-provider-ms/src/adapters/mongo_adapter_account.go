@@ -47,7 +47,7 @@ func (repository *AccountMongoDbRepositoryImpl) Update(account *domain.Account) 
 func (repository *AccountMongoDbRepositoryImpl) FindByInternalAccountId(AccountId string) (*domain.Account, error) {
 	var account *domain.Account
 	filter := bson.D{
-		{"internalaccountid", AccountId},
+		{"internal_account_id", AccountId},
 	}
 	err := repository.collection.Find(filter).One(&account)
 	return account, err
@@ -55,7 +55,7 @@ func (repository *AccountMongoDbRepositoryImpl) FindByInternalAccountId(AccountI
 func (repository *AccountMongoDbRepositoryImpl) FindByProviderAccountId(AccountId string) (*domain.Account, error) {
 	var account *domain.Account
 	filter := bson.D{
-		{"provideraccountid", AccountId},
+		{"provider_account_id", AccountId},
 	}
 	err := repository.collection.Find(filter).One(&account)
 	return account, err

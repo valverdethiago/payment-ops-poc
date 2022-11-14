@@ -1,31 +1,67 @@
 package domain
 
-import (
-	"gopkg.in/mgo.v2/bson"
-)
-
 type SyncRequestServiceImpl struct {
-	eventDispatcher EventDispatcher
+	eventDispatcher       EventDispatcher
+	syncRequestRepository SyncRequestRepository
 }
 
-func NewSyncRequestServiceImpl(eventsDispatcher EventDispatcher) SyncRequestService {
+func NewSyncRequestServiceImpl(eventsDispatcher EventDispatcher,
+	syncRequestRepository SyncRequestRepository) SyncRequestService {
 	return &SyncRequestServiceImpl{
-		eventDispatcher: eventsDispatcher,
+		eventDispatcher:       eventsDispatcher,
+		syncRequestRepository: syncRequestRepository,
 	}
 }
 
-func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(id bson.ObjectId, requestStatus RequestStatus, Message *string) error {
-	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(id, requestStatus, Message)
+func (syncRequestService *SyncRequestServiceImpl) Insert(Request *SyncRequest) (*SyncRequest, error) {
+	return syncRequestService.syncRequestRepository.Insert(Request)
 }
 
-func (syncRequestService *SyncRequestServiceImpl) ChangeToFailingStatus(ID bson.ObjectId, Message *string) error {
-	return syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusFailed, Message)
+func (syncRequestService *SyncRequestServiceImpl) FindLastRequestByAccountIdAndSyncType(internalAccountId string,
+	syncType SyncType) (*SyncRequest, error) {
+	syncRequest, err := syncRequestService.syncRequestRepository.FindLastRequest(internalAccountId, syncType)
+	if err != nil {
+		return nil, err
+	}
+	return syncRequest, nil
 }
 
-func (syncRequestService *SyncRequestServiceImpl) ChangeToPendingStatus(ID bson.ObjectId) error {
-	return syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusPending, nil)
+func (syncRequestService *SyncRequestServiceImpl) UpdateStatusByAccountIdAndSyncType(internalAccountId string,
+	syncType SyncType, status RequestStatus, Message *string) error {
+	syncRequest, err := syncRequestService.FindLastRequestByAccountIdAndSyncType(internalAccountId, syncType)
+	if err != nil {
+		return err
+	}
+	syncRequest.RequestStatus = status
+	syncRequest.ErrorMessage = Message
+	_, err = syncRequestService.syncRequestRepository.Update(syncRequest)
+	if err != nil {
+		return err
+	}
+	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.ID, status, Message)
 }
 
-func (syncRequestService *SyncRequestServiceImpl) ChangeToSuccessfulStatus(ID bson.ObjectId) error {
-	return syncRequestService.UpdateSyncRequestStatus(ID, RequestStatusSuccessful, nil)
+func (syncRequestService *SyncRequestServiceImpl) UpdateSyncRequestStatus(internalAccountId string, syncType SyncType,
+	requestStatus RequestStatus, Message *string) error {
+	syncRequest, err := syncRequestService.FindLastRequestByAccountIdAndSyncType(internalAccountId, syncType)
+	if err != nil {
+		return err
+	}
+	if syncRequest == nil || syncRequest.RequestStatus == requestStatus {
+		return nil
+	}
+	return syncRequestService.eventDispatcher.UpdateSyncRequestStatus(syncRequest.ID, requestStatus, Message)
+}
+
+func (syncRequestService *SyncRequestServiceImpl) ChangeToFailingStatus(internalAccountId string, syncType SyncType, Message *string) error {
+	syncRequestService.FindLastRequestByAccountIdAndSyncType(internalAccountId, syncType)
+	return syncRequestService.UpdateSyncRequestStatus(internalAccountId, syncType, RequestStatusFailed, Message)
+}
+
+func (syncRequestService *SyncRequestServiceImpl) ChangeToPendingStatus(internalAccountId string, syncType SyncType) error {
+	return syncRequestService.UpdateSyncRequestStatus(internalAccountId, syncType, RequestStatusPending, nil)
+}
+
+func (syncRequestService *SyncRequestServiceImpl) ChangeToSuccessfulStatus(internalAccountId string, syncType SyncType) error {
+	return syncRequestService.UpdateSyncRequestStatus(internalAccountId, syncType, RequestStatusSuccessful, nil)
 }

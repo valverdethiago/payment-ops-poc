@@ -9,17 +9,17 @@ import (
 
 type TransactionServiceImpl struct {
 	eventDispatcher       EventDispatcher
-	syncRequestRepository SyncRequestRepository
+	syncRequestService    SyncRequestService
 	accountRepository     AccountRepository
 	transactionRepository TransactionRepository
 	trioClient            TrioClient
 }
 
-func NewTransactionServiceImpl(eventDispatcher EventDispatcher, syncRequestRepository SyncRequestRepository,
+func NewTransactionServiceImpl(eventDispatcher EventDispatcher, syncRequestService SyncRequestService,
 	accountRepository AccountRepository, transactionRepository TransactionRepository, trioClient TrioClient) TransactionService {
 	return &TransactionServiceImpl{
 		eventDispatcher:       eventDispatcher,
-		syncRequestRepository: syncRequestRepository,
+		syncRequestService:    syncRequestService,
 		accountRepository:     accountRepository,
 		transactionRepository: transactionRepository,
 		trioClient:            trioClient,
@@ -33,23 +33,29 @@ func (service TransactionServiceImpl) UpdateAccountTransactions(accountId string
 	}
 	newTransactions, err := service.GetTransactionsList(*account)
 	if err != nil {
+		service.updateSyncRequest(account.InternalAccountId, RequestStatusFailed, err)
 		return err
 	}
 	err = service.eventDispatcher.TriggerTransactionsUpdateEvent(account.InternalAccountId, newTransactions)
 	if err != nil {
+		service.updateSyncRequest(account.InternalAccountId, RequestStatusFailed, err)
 		return err
 	}
 	err = service.updateTransactionsOnDatabase(*account, newTransactions)
 	if err != nil {
+		service.updateSyncRequest(account.InternalAccountId, RequestStatusFailed, err)
 		return err
 	}
-	return service.updateSyncRequestStatus(account.InternalAccountId, RequestStatusSuccessful)
+	return service.updateSyncRequest(account.InternalAccountId, RequestStatusSuccessful, nil)
 }
 
 func (service TransactionServiceImpl) updateTransactionsOnDatabase(account Account, transactions []Transaction) error {
 	now := time.Now()
 	for _, transaction := range transactions {
-		service.MergeTransaction(transaction)
+		err := service.MergeTransaction(transaction)
+		if err != nil {
+			return err
+		}
 	}
 	account.LastTransactionsUpdateAt = &now
 	_, err := service.accountRepository.Update(&account)
@@ -90,26 +96,21 @@ func (service TransactionServiceImpl) buildDomainObjectFromPayload(transaction r
 
 }
 
-func (service TransactionServiceImpl) updateSyncRequestStatus(accountId string, status RequestStatus) error {
-	ID, err := ParseUUID(accountId)
-	if err != nil {
-		return err
-	}
-	syncRequest, err := service.syncRequestRepository.FindPendingRequestByAccountIdAndSyncType(ID, SyncTypeTransactions)
-	if err != nil || syncRequest == nil {
-		return nil
-	}
-	syncRequest.RequestStatus = status
-	_, err = service.syncRequestRepository.Update(syncRequest)
-	return err
-}
-
 func (service TransactionServiceImpl) MergeTransaction(transaction Transaction) error {
 	_, err := service.transactionRepository.FindByProviderIdAndAccountId(transaction.ProviderId,
 		transaction.AccountID)
 	if err != nil && err == mgo.ErrNotFound {
-		service.transactionRepository.Insert(&transaction)
+		_, err = service.transactionRepository.Insert(&transaction)
+		return err
 	}
 	return err
+}
 
+func (service TransactionServiceImpl) updateSyncRequest(internalAccountId string, status RequestStatus, err error) error {
+	var errorMessage string
+	if err != nil {
+		errorMessage = err.Error()
+	}
+	return service.syncRequestService.UpdateStatusByAccountIdAndSyncType(internalAccountId,
+		SyncTypeTransactions, status, &errorMessage)
 }

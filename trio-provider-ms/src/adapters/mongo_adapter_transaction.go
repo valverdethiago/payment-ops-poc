@@ -43,7 +43,7 @@ func (repository *TransactionMongoDbRepositoryImpl) FindByProviderIdAndAccountId
 	accountId bson.ObjectId) (*domain.Transaction, error) {
 	var transaction *domain.Transaction
 	filter := bson.D{
-		{"providerid", providerId},
+		{"provider_id", providerId},
 		{"account_id", accountId},
 	}
 	err := repository.collection.Find(filter).One(&transaction)

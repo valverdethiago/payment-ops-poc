@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/domain"
-	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -34,18 +33,38 @@ func (repository *SyncRequestMongoDbRepositoryImpl) Find(ID bson.ObjectId) (*dom
 	return &syncRequest, err
 }
 
-func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequests(AccountId uuid.UUID, Type domain.SyncType) ([]domain.SyncRequest, error) {
+func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequests(AccountId string, Type domain.SyncType) ([]domain.SyncRequest, error) {
 	var syncRequest []domain.SyncRequest
 	filter := bson.D{
-		{"accountid", AccountId},
-		{"synctype", Type},
+		{"account_id", AccountId},
+		{"sync_type", Type},
 		{"$or", []interface{}{
-			bson.D{{"requeststatus", domain.RequestStatusCreated}},
-			bson.D{{"requeststatus", domain.RequestStatusPending}},
+			bson.D{{"request_status", domain.RequestStatusCreated}},
+			bson.D{{"request_status", domain.RequestStatusPending}},
 		}},
 	}
 	err := repository.collection.Find(filter).All(&syncRequest)
 	return syncRequest, err
+}
+
+func (repository *SyncRequestMongoDbRepositoryImpl) FindLastRequest(internalAccountId string, Type domain.SyncType) (*domain.SyncRequest, error) {
+	var syncRequest []domain.SyncRequest
+	filter := bson.D{
+		{"account_id", internalAccountId},
+		{"sync_type", Type},
+		{"$or", []interface{}{
+			bson.D{{"request_status", domain.RequestStatusCreated}},
+			bson.D{{"request_status", domain.RequestStatusPending}},
+		}},
+	}
+	err := repository.collection.Find(filter).Sort("-created_at").All(&syncRequest)
+	if err != nil && err != mgo.ErrNotFound {
+		return nil, err
+	}
+	if len(syncRequest) > 0 {
+		return &syncRequest[0], nil
+	}
+	return nil, nil
 }
 
 func (repository *SyncRequestMongoDbRepositoryImpl) Insert(Request *domain.SyncRequest) (*domain.SyncRequest, error) {
@@ -59,7 +78,7 @@ func (repository *SyncRequestMongoDbRepositoryImpl) Update(Request *domain.SyncR
 	return Request, err
 }
 
-func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequestByAccountIdAndSyncType(accountId uuid.UUID, syncType domain.SyncType) (*domain.SyncRequest, error) {
+func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequestByAccountIdAndSyncType(accountId string, syncType domain.SyncType) (*domain.SyncRequest, error) {
 	syncRequests, err := repository.FindPendingRequests(accountId, syncType)
 	if err != nil || len(syncRequests) <= 0 {
 		return nil, err

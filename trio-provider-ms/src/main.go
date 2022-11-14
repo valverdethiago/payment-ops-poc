@@ -40,11 +40,11 @@ func configureServer(config *config.Config) *api.Server {
 	accountRepository, transactionRepository, syncRequestRepository := configureRepositories(database)
 	eventDispatcher := configureEventDispatcher(ctx, config)
 	syncRequestService, balanceService, transactionService := configureServices(eventDispatcher,
-		syncRequestRepository, accountRepository, transactionRepository, trioClient)
-	eventSubscriberService := configureEventSubscriberService(syncRequestRepository, accountRepository,
-		trioClient, eventDispatcher)
+		accountRepository, transactionRepository, syncRequestRepository, trioClient)
+	eventSubscriberService := configureEventSubscriberService(syncRequestService, accountRepository,
+		trioClient)
 	configureConsumer(ctx, config, eventSubscriberService)
-	configureControllers(server, syncRequestService, balanceService, transactionService)
+	configureControllers(server, syncRequestService, balanceService, transactionService, accountRepository)
 	return server
 }
 
@@ -79,45 +79,48 @@ func configureTrioClient(config *config.Config) domain.TrioClient {
 }
 
 func configureServices(dispatcher domain.EventDispatcher,
-	syncRequestRepository domain.SyncRequestRepository,
 	accountRepository domain.AccountRepository,
 	transactionRepository domain.TransactionRepository,
+	syncRequestRepository domain.SyncRequestRepository,
 	trioClient domain.TrioClient) (domain.SyncRequestService,
 	domain.BalanceService, domain.TransactionService) {
-	return configureSyncRequestService(dispatcher),
-		configureBalanceService(dispatcher, accountRepository, syncRequestRepository),
-		configureTransactionService(dispatcher, syncRequestRepository, accountRepository,
+	syncRequestService := configureSyncRequestService(dispatcher, syncRequestRepository)
+	return syncRequestService,
+		configureBalanceService(dispatcher, accountRepository, syncRequestService),
+		configureTransactionService(dispatcher, syncRequestService, accountRepository,
 			transactionRepository, trioClient)
 }
 
 func configureControllers(server *api.Server, syncRequestService domain.SyncRequestService,
-	balanceService domain.BalanceService, transactionService domain.TransactionService) {
-	controller := domain.NewWebHookControllerImpl(syncRequestService, balanceService, transactionService)
+	balanceService domain.BalanceService, transactionService domain.TransactionService,
+	accountRepository domain.AccountRepository) {
+	controller := domain.NewWebHookControllerImpl(syncRequestService, balanceService,
+		transactionService, accountRepository)
 	server.ConfigureController(controller)
 }
 
-func configureSyncRequestService(dispatcher domain.EventDispatcher) domain.SyncRequestService {
-	return domain.NewSyncRequestServiceImpl(dispatcher)
+func configureSyncRequestService(dispatcher domain.EventDispatcher,
+	syncRequestRepository domain.SyncRequestRepository) domain.SyncRequestService {
+	return domain.NewSyncRequestServiceImpl(dispatcher, syncRequestRepository)
 }
 
 func configureBalanceService(dispatcher domain.EventDispatcher,
-	accountRepository domain.AccountRepository, syncRequestRepository domain.SyncRequestRepository) domain.BalanceService {
-	return domain.NewBalanceServiceImpl(dispatcher, accountRepository, syncRequestRepository)
+	accountRepository domain.AccountRepository, syncRequestService domain.SyncRequestService) domain.BalanceService {
+	return domain.NewBalanceServiceImpl(dispatcher, accountRepository, syncRequestService)
 }
 
 func configureTransactionService(dispatcher domain.EventDispatcher,
-	syncRequestRepository domain.SyncRequestRepository,
+	syncRequestService domain.SyncRequestService,
 	accountRepository domain.AccountRepository,
 	transactionRepository domain.TransactionRepository,
 	trioClient domain.TrioClient) domain.TransactionService {
-	return domain.NewTransactionServiceImpl(dispatcher, syncRequestRepository,
+	return domain.NewTransactionServiceImpl(dispatcher, syncRequestService,
 		accountRepository, transactionRepository, trioClient)
 }
 
-func configureEventSubscriberService(syncRequestRepository domain.SyncRequestRepository,
-	accountRepository domain.AccountRepository, trioClient domain.TrioClient,
-	eventDispatcher domain.EventDispatcher) events.EventSubscriberService {
-	return events.NewEventSubscriberServiceImpl(syncRequestRepository, accountRepository, trioClient, eventDispatcher)
+func configureEventSubscriberService(syncRequestService domain.SyncRequestService,
+	accountRepository domain.AccountRepository, trioClient domain.TrioClient) events.EventSubscriberService {
+	return events.NewEventSubscriberServiceImpl(syncRequestService, accountRepository, trioClient)
 }
 
 func configureConsumer(ctx context.Context, config *config.Config,
