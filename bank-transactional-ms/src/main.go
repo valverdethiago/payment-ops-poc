@@ -46,20 +46,49 @@ func executeMigrations(db *sql.DB) {
 	m.Up()
 }
 
-func configureAccountRepository(ctx context.Context, querier db.Querier) domain.AccountRepository {
-	return adapters.NewAccountRepositoryImpl(querier, ctx)
+func configureServer(config *config.Config) *api.Server {
+	ctx := context.Background()
+	server := api.NewServer(config)
+	conn := openDatabaseConnection(config)
+	executeMigrations(conn)
+	queries := db.New(conn)
+	accountRepository, accountBalanceRepository, transactionRepository := configureRepositories(ctx, queries)
+	accountService, accountBalanceService, transactionService := configureServices(accountRepository,
+		accountBalanceRepository, transactionRepository)
+	configureEventServices(ctx, config, accountService, accountBalanceService, transactionService)
+	configureControllers(*server)
+	return server
 }
 
-func configureAccountBalanceRepository(ctx context.Context, querier db.Querier) domain.AccountBalanceRepository {
-	return adapters.NewAccountBalanceRepositoryImpl(querier, ctx)
+func configureControllers(server api.Server) {
+	controller := domain.NewTestController()
+	server.ConfigureController(controller)
 }
 
-func configureAccountService(repository domain.AccountRepository) domain.AccountService {
-	return domain.NewAccountServiceImpl(repository)
+func configureRepositories(ctx context.Context, querier db.Querier) (domain.AccountRepository, domain.AccountBalanceRepository,
+	domain.TransactionRepository) {
+	return adapters.NewAccountRepositoryImpl(querier, ctx),
+		adapters.NewAccountBalanceRepositoryImpl(querier, ctx),
+		adapters.NewTransactionRepositoryImpl(querier, ctx)
 }
 
-func configureAccountBalanceService(repository domain.AccountBalanceRepository) domain.AccountBalanceService {
-	return domain.NewAccountBalanceServiceImpl(repository)
+func configureServices(accountRepository domain.AccountRepository,
+	accountBalanceRepository domain.AccountBalanceRepository,
+	transactionRepository domain.TransactionRepository) (domain.AccountService,
+	domain.AccountBalanceService, domain.TransactionService) {
+	return domain.NewAccountServiceImpl(accountRepository),
+		domain.NewAccountBalanceServiceImpl(accountBalanceRepository),
+		domain.NewTransactionServiceImpl(transactionRepository)
+}
+
+func configureEventServices(ctx context.Context, config *config.Config,
+	accountService domain.AccountService, accountBalanceService domain.AccountBalanceService,
+	transactionService domain.TransactionService) {
+	eventDispatcher := configureEventDispatcher(ctx, config)
+	syncRequestService := configureSyncRequestService(eventDispatcher)
+	eventSubscriberServices := configureEventSubscriberService(accountService, accountBalanceService, transactionService,
+		syncRequestService)
+	configureEventConsumers(ctx, config, eventSubscriberServices)
 }
 
 func configureSyncRequestService(eventDispatcher domain.EventDispatcher) domain.SyncRequestService {
@@ -68,8 +97,10 @@ func configureSyncRequestService(eventDispatcher domain.EventDispatcher) domain.
 
 func configureEventSubscriberService(accountService domain.AccountService,
 	accountBalanceService domain.AccountBalanceService,
+	transactionService domain.TransactionService,
 	syncRequestService domain.SyncRequestService) domain.EventSubscriberService {
-	return domain.NewEventSubscriberServiceImpl(accountService, accountBalanceService, syncRequestService)
+	return domain.NewEventSubscriberServiceImpl(accountService, accountBalanceService, transactionService,
+		syncRequestService)
 }
 
 func configureEventDispatcher(ctx context.Context, config *config.Config) domain.EventDispatcher {
@@ -101,29 +132,10 @@ func configureConsumer(ctx context.Context, kafkaBroker string, kafkaTopic strin
 	return consumer
 }
 
-func configureServer(config *config.Config) *api.Server {
-	ctx := context.Background()
-	server := api.NewServer(config)
-	conn := openDatabaseConnection(config)
-	executeMigrations(conn)
-	queries := db.New(conn)
-	accountRepository := configureAccountRepository(ctx, queries)
-	accountBalanceRepository := configureAccountBalanceRepository(ctx, queries)
-	accountService := configureAccountService(accountRepository)
-	accountBalanceService := configureAccountBalanceService(accountBalanceRepository)
-	eventDispatcher := configureEventDispatcher(ctx, config)
-	syncRequestService := configureSyncRequestService(eventDispatcher)
-	service := configureEventSubscriberService(accountService, accountBalanceService, syncRequestService)
-	configureConsumers(ctx, config, service)
-	controller := domain.NewTestController()
-	server.ConfigureController(controller)
-	return server
-}
-
-func configureConsumers(ctx context.Context, config *config.Config, service domain.EventSubscriberService) {
+func configureEventConsumers(ctx context.Context, config *config.Config, service domain.EventSubscriberService) {
 	configureSyncRequestConsumer(ctx, config, service)
 	configureBalanceUpdateConsumer(ctx, config, service)
-	//configureTransactionsUpdateConsumer(ctx, config, service)
+	configureTransactionsUpdateConsumer(ctx, config, service)
 }
 
 func startServer(server *api.Server) {

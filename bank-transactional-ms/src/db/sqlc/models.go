@@ -7,6 +7,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -85,4 +86,18 @@ type Configuration struct {
 	ConfigurationUuid   uuid.UUID `json:"configuration_uuid"`
 	BankUuid            uuid.UUID `json:"bank_uuid"`
 	KafkaInputTopicName string    `json:"kafka_input_topic_name"`
+}
+
+type Transaction struct {
+	TransactionUuid   uuid.UUID      `json:"transaction_uuid"`
+	AccountUuid       uuid.UUID      `json:"account_uuid"`
+	ProviderAccountID string         `json:"provider_account_id"`
+	Description       sql.NullString `json:"description"`
+	DescriptionType   sql.NullString `json:"description_type"`
+	Identification    string         `json:"identification"`
+	Status            string         `json:"status"`
+	Amount            float64        `json:"amount"`
+	Currency          string         `json:"currency"`
+	DateTime          time.Time      `json:"date_time"`
+	CreatedAt         sql.NullTime   `json:"created_at"`
 }

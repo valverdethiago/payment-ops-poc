@@ -15,3 +15,8 @@ type AccountBalanceRepository interface {
 	FindCurrentBalanceByAccount(accountId uuid.UUID) (*db.AccountBalance, error)
 	UpdateAccountBalance(accountId uuid.UUID, amount float64, currency string) (*db.AccountBalance, error)
 }
+
+type TransactionRepository interface {
+	FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error)
+	InsertTransaction(transaction db.Transaction) (*db.Transaction, error)
+}

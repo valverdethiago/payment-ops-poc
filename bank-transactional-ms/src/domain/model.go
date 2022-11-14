@@ -45,6 +45,29 @@ type BalanceUpdateEvent struct {
 	Currency  string  `json:"Currency"`
 }
 
+type Balance struct {
+	Amount   float64 `json:"amount"`
+	Currency string  `json:"currency"`
+}
+
+type Transaction struct {
+	AccountId       string    `json:"account_id"`
+	Description     string    `json:"description"`
+	DescriptionType string    `json:"description_type"`
+	ProviderId      string    `json:"provider_id"`
+	Identification  string    `json:"identification"`
+	InsertedAt      string    `json:"inserted_at"`
+	Status          string    `json:"status"`
+	Timestamp       time.Time `json:"timestamp"`
+	UpdatedAt       string    `json:"updated_at"`
+	Balance         Balance   `json:"balance"`
+}
+
+type TransactionsUpdateEvent struct {
+	AccountId    string        `json:"accountId"`
+	Transactions []Transaction `json:"transactions"`
+}
+
 type SyncRequestResult struct {
 	ID            bson.ObjectId `bson:"_id" json:"id,omitempty" `
 	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`

@@ -24,14 +24,16 @@ type EventDispatcher interface {
 type EventSubscriberServiceImpl struct {
 	accountService        AccountService
 	accountBalanceService AccountBalanceService
+	transactionService    TransactionService
 	syncRequestService    SyncRequestService
 }
 
 func NewEventSubscriberServiceImpl(accountService AccountService, accountBalanceService AccountBalanceService,
-	syncRequestService SyncRequestService) EventSubscriberService {
+	transactionService TransactionService, syncRequestService SyncRequestService) EventSubscriberService {
 	return &EventSubscriberServiceImpl{
 		accountService:        accountService,
 		accountBalanceService: accountBalanceService,
+		transactionService:    transactionService,
 		syncRequestService:    syncRequestService,
 	}
 }
@@ -88,8 +90,27 @@ func (subscriberService *EventSubscriberServiceImpl) OnReceiveBalanceUpdate(valu
 }
 
 func (subscriberService *EventSubscriberServiceImpl) OnReceiveTransactionsUpdate(value string) error {
-	//TODO implement me
-	panic("implement me")
+	payload, err := ParseTransactionsUpdateEventJson(value)
+	if err != nil {
+		return err
+	}
+	AccountID, err := parseUUID(payload.AccountId)
+	if err != nil {
+		return err
+	}
+	account, _, _, err := subscriberService.accountService.FindAccountInformation(AccountID)
+	if err != nil {
+		return err
+	}
+	if !subscriberService.accountService.IsAccountInValidState(account) {
+		return errors.New(fmt.Sprintf("Account %s is in invalid state", AccountID))
+	}
+	transactions, err := ConvertTransactionsFromRestPayload(payload)
+	if err != nil {
+		return err
+	}
+	_, err = subscriberService.transactionService.InsertTransactions(transactions)
+	return err
 }
 
 func ParseSyncRequestJson(value string) (SyncRequest, error) {
@@ -100,6 +121,12 @@ func ParseSyncRequestJson(value string) (SyncRequest, error) {
 
 func ParseBalanceUpdateEventJson(value string) (BalanceUpdateEvent, error) {
 	event := BalanceUpdateEvent{}
+	err := json.Unmarshal([]byte(value), &event)
+	return event, err
+}
+
+func ParseTransactionsUpdateEventJson(value string) (TransactionsUpdateEvent, error) {
+	event := TransactionsUpdateEvent{}
 	err := json.Unmarshal([]byte(value), &event)
 	return event, err
 }

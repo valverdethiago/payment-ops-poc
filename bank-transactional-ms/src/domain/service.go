@@ -24,3 +24,9 @@ type SyncRequestService interface {
 	ChangeToSuccessfulStatus(ID bson.ObjectId)
 	RequestProviderSync(name string, request ProviderSyncRequest) error
 }
+
+type TransactionService interface {
+	FindAllTransactionsByAccount(accountId uuid.UUID) (*[]db.Transaction, error)
+	InsertTransaction(transaction db.Transaction) (*db.Transaction, error)
+	InsertTransactions(transactions []db.Transaction) ([]db.Transaction, error)
+}

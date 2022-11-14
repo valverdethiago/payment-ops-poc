@@ -15,11 +15,13 @@ type Querier interface {
 	FindAllBalancesByAccount(ctx context.Context, accountUuid uuid.UUID) ([]AccountBalance, error)
 	FindCurrentBalanceByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountBalance, error)
 	FindLastActivityByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
+	FindTransactionsByAccount(ctx context.Context, accountUuid uuid.UUID) ([]Transaction, error)
 	GetAccountByID(ctx context.Context, accountUuid uuid.UUID) (Account, error)
 	GetBankByID(ctx context.Context, bankUuid uuid.UUID) (Bank, error)
 	GetConfigurationByBankID(ctx context.Context, bankUuid uuid.UUID) (Configuration, error)
 	GetConfigurationByID(ctx context.Context, configurationUuid uuid.UUID) (Configuration, error)
 	GetFullAccountInfoByID(ctx context.Context, accountUuid uuid.UUID) (GetFullAccountInfoByIDRow, error)
+	InsertTransaction(ctx context.Context, arg InsertTransactionParams) (Transaction, error)
 	IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 	UpdateAccountBalance(ctx context.Context, arg UpdateAccountBalanceParams) (AccountBalance, error)
 }
