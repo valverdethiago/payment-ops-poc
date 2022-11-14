@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/infra"
+	"github.com/google/uuid"
 )
 
 var (
@@ -28,11 +29,11 @@ func NewSyncRequestService(syncRequestRepository SyncRequestRepository,
 	}
 }
 
-func (service *syncRequestService) Find(id string) (*SyncRequest, error) {
+func (service *syncRequestService) Find(id bson.ObjectId) (*SyncRequest, error) {
 	return service.syncRequestRepository.Find(id)
 }
 
-func (service *syncRequestService) Request(AccountId string, Type SyncType) (*SyncRequest, error) {
+func (service *syncRequestService) Request(AccountId uuid.UUID, Type SyncType) (*SyncRequest, error) {
 	requests, err := service.syncRequestRepository.FindPendingRequests(AccountId, Type)
 	if err != nil || (requests != nil && len(requests) > 0) {
 		if err == mgo.ErrNotFound {
@@ -43,7 +44,7 @@ func (service *syncRequestService) Request(AccountId string, Type SyncType) (*Sy
 	return service.createSyncRequest(AccountId, Type)
 }
 
-func (service *syncRequestService) createSyncRequest(AccountId string, Type SyncType) (_ *SyncRequest, err error) {
+func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type SyncType) (_ *SyncRequest, err error) {
 
 	request := &SyncRequest{
 		ID:            bson.NewObjectId(),

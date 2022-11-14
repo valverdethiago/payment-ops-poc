@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 )
 
 type requestId struct {
-	ID string `uri:"id" binding: "required"`
+	ID bson.ObjectId `uri:"id" binding: "required"`
 }
 
 type newSyncRequest struct {

@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/domain"
+	"github.com/google/uuid"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -27,13 +28,13 @@ func (store *MongoDbStore) connect(collectionName string) {
 	store.collection = store.database.C(collectionName)
 }
 
-func (store *MongoDbStore) Find(ID string) (*domain.SyncRequest, error) {
+func (store *MongoDbStore) Find(ID bson.ObjectId) (*domain.SyncRequest, error) {
 	var syncRequest domain.SyncRequest
-	err := store.collection.FindId(bson.ObjectIdHex(ID)).One(&syncRequest)
+	err := store.collection.FindId(ID).One(&syncRequest)
 	return &syncRequest, err
 }
 
-func (store *MongoDbStore) FindPendingRequests(AccountId string, Type domain.SyncType) ([]domain.SyncRequest, error) {
+func (store *MongoDbStore) FindPendingRequests(AccountId uuid.UUID, Type domain.SyncType) ([]domain.SyncRequest, error) {
 	var syncRequest []domain.SyncRequest
 	filter := bson.D{
 		{"accountid", AccountId},
