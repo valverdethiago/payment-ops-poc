@@ -3,6 +3,7 @@ package domain
 import (
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 	"net/http"
 )
 
@@ -54,9 +55,11 @@ func (controller *WebHookController) HandleBalancesCallback(ctx *gin.Context) {
 		return
 	}
 	if payload.Error != nil && payload.Error.Message != nil {
-		controller.SyncRequestService.NotifyErrorOnSyncRequest(payload.Event.AccountID, payload.Error.Message)
+		controller.SyncRequestService.ChangeToFailingStatus(bson.ObjectIdHex(payload.Event.AccountID),
+			payload.Error.Message)
 	}
-	controller.BalanceService.UpdateAccountBalance(payload.Event.AccountID, payload.Data.Amount.Amount, payload.Data.Amount.Currency)
+	controller.BalanceService.UpdateAccountBalance(payload.Event.AccountID, payload.Data.Amount.Amount,
+		payload.Data.Amount.Currency)
 
 }
 
@@ -67,7 +70,7 @@ func (controller *WebHookController) HandleTransactionsCallback(ctx *gin.Context
 		return
 	}
 	if payload.Error != nil && payload.Error.Message != nil {
-		controller.SyncRequestService.NotifyErrorOnSyncRequest(payload.Event.AccountID, payload.Error.Message)
+		controller.SyncRequestService.ChangeToFailingStatus(bson.ObjectIdHex(payload.Event.AccountID), payload.Error.Message)
 	}
 	controller.TransactionService.UpdateAccountTransactions(payload.Event.AccountID)
 }

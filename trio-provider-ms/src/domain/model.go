@@ -2,6 +2,7 @@ package domain
 
 import (
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type RequestStatus string
@@ -53,8 +54,30 @@ type SyncRequestResult struct {
 	SentAt        int64         `json:"CreatedAt"`
 }
 
-type AccountMapping struct {
-	ID                bson.ObjectId `bson:"_id" json:"id,omitempty" `
-	InternalAccountId string        `json:"InternalAccountId"`
-	ProviderAccountId string        `json:"ProviderAccountId"`
+type Balance struct {
+	Amount   float64 `json:"amount"`
+	Currency string  `json:"currency"`
+}
+
+type Transaction struct {
+	ID              bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	AccountID       bson.ObjectId `bson:"account_id" json:"id,omitempty" `
+	Description     string        `json:"description"`
+	DescriptionType string        `json:"description_type"`
+	ProviderId      string        `json:"id"`
+	Identification  string        `json:"identification"`
+	InsertedAt      string        `json:"inserted_at"`
+	Status          string        `json:"status"`
+	Timestamp       time.Time     `json:"timestamp"`
+	UpdatedAt       string        `json:"updated_at"`
+	Balance         Balance       `json:"balance"`
+}
+
+type Account struct {
+	ID                       bson.ObjectId `bson:"_id" json:"id,omitempty" `
+	InternalAccountId        string        `json:"InternalAccountId"`
+	ProviderAccountId        string        `json:"ProviderAccountId"`
+	LastBalanceUpdateAt      *time.Time    `json:"LastBalanceUpdateAt"`
+	LastTransactionsUpdateAt *time.Time    `json:"LastBalanceUpdateAt"`
+	CurrentBalance           Balance       `json:"CurrentBalance"`
 }

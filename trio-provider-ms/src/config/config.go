@@ -8,18 +8,20 @@ import (
 )
 
 type Config struct {
-	KafkaBroker            string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
-	KafkaClientId          string `mapstructure:"TRIO_PROVIDER_KAFKA_CLIENT_ID"`
-	DBServer               string `mapstructure:"TRIO_PROVIDER_DB_SERVER"`
-	DBName                 string `mapstructure:"TRIO_PROVIDER_DB_NAME"`
-	ServerAddress          string `mapstructure:"TRIO_PROVIDER_SERVER_ADDRESS"`
-	ReadTimeout            int    `mapstructure:"TRIO_PROVIDER_READ_TIMEOUT"`
-	WriteTimeout           int    `mapstructure:"TRIO_PROVIDER_WRITE_TIMEOUT"`
-	SyncRequestInputTopic  string `mapstructure:"TRIO_SYNC_REQUEST_INPUT_TOPIC"`
-	SyncRequestOutputTopic string `mapstructure:"SYNC_REQUESTS_OUTPUT"`
-	BasePath               string `mapstructure:"TRIO_PROVIDER_BASE_PATH"`
-	ClientID               string `mapstructure:"TRIO_PROVIDER_CLIENT_ID"`
-	ClientSecret           string `mapstructure:"TRIO_PROVIDER_CLIENT_SECRET"`
+	KafkaBroker             string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
+	KafkaClientId           string `mapstructure:"TRIO_PROVIDER_KAFKA_CLIENT_ID"`
+	DBServer                string `mapstructure:"TRIO_PROVIDER_DB_SERVER"`
+	DBName                  string `mapstructure:"TRIO_PROVIDER_DB_NAME"`
+	ServerAddress           string `mapstructure:"TRIO_PROVIDER_SERVER_ADDRESS"`
+	ReadTimeout             int    `mapstructure:"TRIO_PROVIDER_READ_TIMEOUT"`
+	WriteTimeout            int    `mapstructure:"TRIO_PROVIDER_WRITE_TIMEOUT"`
+	SyncRequestInputTopic   string `mapstructure:"TRIO_SYNC_REQUEST_INPUT_TOPIC"`
+	SyncRequestOutputTopic  string `mapstructure:"SYNC_REQUESTS_OUTPUT_TOPIC"`
+	BalanceUpdateTopic      string `mapstructure:"BALANCE_UPDATE_TOPIC"`
+	TransactionsUpdateTopic string `mapstructure:"TRANSACTIONS_UPDATE_TOPIC"`
+	BasePath                string `mapstructure:"TRIO_PROVIDER_BASE_PATH"`
+	ClientID                string `mapstructure:"TRIO_PROVIDER_CLIENT_ID"`
+	ClientSecret            string `mapstructure:"TRIO_PROVIDER_CLIENT_SECRET"`
 }
 
 // LoadConfig loads config from env

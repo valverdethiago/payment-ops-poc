@@ -9,11 +9,12 @@ import (
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
 	"io"
 	"net/http"
+	url2 "net/url"
 )
 
 const (
 	fetchBalancesUrl     string = `%s/accounts/%s/balances`
-	fetchTransactionsUrl string = `%s/accounts/%s/transactions`
+	fetchTransactionsUrl string = `%s/accounts/%s/transactions?date_from=2022-01-01`
 	postMethod           string = "POST"
 	getMethod            string = "GET"
 )
@@ -32,8 +33,8 @@ func (trioHttpClientImpl *TrioHttpClientImpl) SetBasicAuth(request *http.Request
 	request.SetBasicAuth(trioHttpClientImpl.config.ClientID, trioHttpClientImpl.config.ClientSecret)
 }
 
-func (trioHttpClientImpl *TrioHttpClientImpl) FetchBalancesFromBank(AccountId string) (*restclient.FetchRequestResponse, error) {
-	url := fmt.Sprintf(fetchBalancesUrl, trioHttpClientImpl.config.BasePath, AccountId)
+func (trioHttpClientImpl *TrioHttpClientImpl) FetchBalancesFromBank(account domain.Account) (*restclient.FetchRequestResponse, error) {
+	url := fmt.Sprintf(fetchBalancesUrl, trioHttpClientImpl.config.BasePath, account.ProviderAccountId)
 	client := &http.Client{}
 	request, err := http.NewRequest(postMethod, url, nil)
 	if err != nil {
@@ -54,7 +55,7 @@ func (trioHttpClientImpl *TrioHttpClientImpl) FetchBalancesFromBank(AccountId st
 	}
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
-	var responseObj *restclient.FetchRequestResponse
+	responseObj := &restclient.FetchRequestResponse{}
 	err = json.Unmarshal(bodyBytes, responseObj)
 	if err != nil {
 		return nil, err
@@ -92,10 +93,15 @@ func (trioHttpClientImpl *TrioHttpClientImpl) ListBalance(AccountId string) (*re
 	return responseObj, nil
 }
 
-func (trioHttpClientImpl *TrioHttpClientImpl) FetchTransactionsFromBank(AccountId string) (*restclient.FetchRequestResponse, error) {
-	url := fmt.Sprintf(fetchTransactionsUrl, trioHttpClientImpl.config.BasePath, AccountId)
+func (trioHttpClientImpl *TrioHttpClientImpl) FetchTransactionsFromBank(account domain.Account) (*restclient.FetchRequestResponse, error) {
+	url, err := url2.Parse(fmt.Sprintf(fetchTransactionsUrl, trioHttpClientImpl.config.BasePath, account.ProviderAccountId))
+	if err != nil {
+		return nil, err
+	}
+	values := url.Query()
+	values.Del("date_from")
 	client := &http.Client{}
-	request, err := http.NewRequest(postMethod, url, nil)
+	request, err := http.NewRequest(postMethod, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -122,10 +128,21 @@ func (trioHttpClientImpl *TrioHttpClientImpl) FetchTransactionsFromBank(AccountI
 	return responseObj, nil
 }
 
-func (trioHttpClientImpl *TrioHttpClientImpl) ListTransactions(AccountId string) (*restclient.ListTransactionsResponse, error) {
-	url := fmt.Sprintf(fetchBalancesUrl, trioHttpClientImpl.config.BasePath, AccountId)
+func (trioHttpClientImpl *TrioHttpClientImpl) ListTransactions(account domain.Account) (*restclient.ListTransactionsResponse, error) {
+
+	url, err := url2.Parse(fmt.Sprintf(fetchTransactionsUrl, trioHttpClientImpl.config.BasePath, account.ProviderAccountId))
+	if err != nil {
+		return nil, err
+	}
+	values := url.Query()
+	if account.LastTransactionsUpdateAt == nil {
+		values.Del("date_from")
+	} else {
+		values.Set("date_from", account.LastTransactionsUpdateAt.Format("2006-01-02"))
+	}
+	url.RawQuery = values.Encode()
 	client := &http.Client{}
-	request, err := http.NewRequest("POST", url, nil)
+	request, err := http.NewRequest(getMethod, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +161,7 @@ func (trioHttpClientImpl *TrioHttpClientImpl) ListTransactions(AccountId string)
 	}
 	bodyString := string(bodyBytes)
 	fmt.Println(bodyString)
-	var responseObj *restclient.ListTransactionsResponse
+	responseObj := &restclient.ListTransactionsResponse{}
 	err = json.Unmarshal(bodyBytes, responseObj)
 	if err != nil {
 		return nil, err

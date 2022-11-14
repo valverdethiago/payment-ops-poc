@@ -6,6 +6,7 @@ import (
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/api"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/config"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/domain"
+	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/events"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/infra"
 	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/util"
 	"gopkg.in/mgo.v2"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	DefaultAccountMapping domain.AccountMapping = domain.AccountMapping{
+	DefaultAccountMapping = domain.Account{
 		ID:                bson.NewObjectId(),
 		InternalAccountId: "9b2272fe-53ad-4d5d-bfaf-ce2f1cf27ccf",
 		ProviderAccountId: "6501663c-3a19-47df-9a2a-bc0796b702fd",
@@ -36,32 +37,36 @@ func configureServer(config *config.Config) *api.Server {
 	server := api.NewServer(config)
 	database := openDatabaseConnection(config)
 	trioClient := configureTrioClient(config)
-	accountRepository, syncRequestRepository := configureRepositories(database)
+	accountRepository, transactionRepository, syncRequestRepository := configureRepositories(database)
 	eventDispatcher := configureEventDispatcher(ctx, config)
+	syncRequestService, balanceService, transactionService := configureServices(eventDispatcher,
+		syncRequestRepository, accountRepository, transactionRepository, trioClient)
 	eventSubscriberService := configureEventSubscriberService(syncRequestRepository, accountRepository,
 		trioClient, eventDispatcher)
 	configureConsumer(ctx, config, eventSubscriberService)
-	//producer := configureKafkaProducer(ctx, config)
-	configureControllers(server)
+	configureControllers(server, syncRequestService, balanceService, transactionService)
 	return server
 }
 
 func configureEventDispatcher(ctx context.Context, config *config.Config) domain.EventDispatcher {
-	return adapters.NewEventDispatcherImpl(ctx, []string{config.KafkaBroker}, config.SyncRequestOutputTopic)
+	return adapters.NewEventDispatcherImpl(ctx, []string{config.KafkaBroker},
+		config.SyncRequestOutputTopic, config.BalanceUpdateTopic, config.TransactionsUpdateTopic)
 }
 
-func configureRepositories(database *mgo.Database) (domain.AccountRepository, domain.SyncRequestRepository) {
+func configureRepositories(database *mgo.Database) (domain.AccountRepository,
+	domain.TransactionRepository, domain.SyncRequestRepository) {
 	syncRequestRepository := adapters.NewSyncRepositoryMongoDbImpl(database)
-	accountRepository := adapters.NewAccountMappingMongoDbRepositoryImpl(database)
+	accountRepository := adapters.NewAccountMongoDbRepositoryImpl(database)
+	transactionRepository := adapters.NewTransactionMongoDbRepositoryImpl(database)
 	configureDefaultAccountMapping(accountRepository)
-	return accountRepository, syncRequestRepository
+	return accountRepository, transactionRepository, syncRequestRepository
 }
 
 func configureDefaultAccountMapping(accountRepository domain.AccountRepository) {
-	AccountMapping, err := accountRepository.FindByAccountId(DefaultAccountMapping.InternalAccountId)
+	AccountMapping, err := accountRepository.FindByInternalAccountId(DefaultAccountMapping.InternalAccountId)
 	if err != nil || AccountMapping == nil {
 		log.Println("Error searching default account mapping")
-		accountRepository.Store(&DefaultAccountMapping)
+		accountRepository.Insert(&DefaultAccountMapping)
 	}
 }
 
@@ -73,37 +78,50 @@ func configureTrioClient(config *config.Config) domain.TrioClient {
 	return adapters.NewTrioHttpClient(config)
 }
 
-func configureControllers(server *api.Server) {
-	SyncRequestService := configureSyncRequestService()
-	BalanceService := configureBalanceService()
-	TransactionService := configureTransactionService()
-	controller := domain.NewWebHookControllerImpl(SyncRequestService, BalanceService, TransactionService)
+func configureServices(dispatcher domain.EventDispatcher,
+	syncRequestRepository domain.SyncRequestRepository,
+	accountRepository domain.AccountRepository,
+	transactionRepository domain.TransactionRepository,
+	trioClient domain.TrioClient) (domain.SyncRequestService,
+	domain.BalanceService, domain.TransactionService) {
+	return configureSyncRequestService(dispatcher),
+		configureBalanceService(dispatcher, accountRepository, syncRequestRepository),
+		configureTransactionService(dispatcher, syncRequestRepository, accountRepository,
+			transactionRepository, trioClient)
+}
+
+func configureControllers(server *api.Server, syncRequestService domain.SyncRequestService,
+	balanceService domain.BalanceService, transactionService domain.TransactionService) {
+	controller := domain.NewWebHookControllerImpl(syncRequestService, balanceService, transactionService)
 	server.ConfigureController(controller)
 }
 
-func configureSyncRequestService() domain.SyncRequestService {
-	//TODO implement
-	return nil
+func configureSyncRequestService(dispatcher domain.EventDispatcher) domain.SyncRequestService {
+	return domain.NewSyncRequestServiceImpl(dispatcher)
 }
 
-func configureBalanceService() domain.BalanceService {
-	//TODO implement
-	return nil
+func configureBalanceService(dispatcher domain.EventDispatcher,
+	accountRepository domain.AccountRepository, syncRequestRepository domain.SyncRequestRepository) domain.BalanceService {
+	return domain.NewBalanceServiceImpl(dispatcher, accountRepository, syncRequestRepository)
 }
 
-func configureTransactionService() domain.TransactionService {
-	//TODO implement
-	return nil
+func configureTransactionService(dispatcher domain.EventDispatcher,
+	syncRequestRepository domain.SyncRequestRepository,
+	accountRepository domain.AccountRepository,
+	transactionRepository domain.TransactionRepository,
+	trioClient domain.TrioClient) domain.TransactionService {
+	return domain.NewTransactionServiceImpl(dispatcher, syncRequestRepository,
+		accountRepository, transactionRepository, trioClient)
 }
 
 func configureEventSubscriberService(syncRequestRepository domain.SyncRequestRepository,
 	accountRepository domain.AccountRepository, trioClient domain.TrioClient,
-	eventDispatcher domain.EventDispatcher) domain.EventSubscriberService {
-	return domain.NewEventSubscriberServiceImpl(syncRequestRepository, accountRepository, trioClient, eventDispatcher)
+	eventDispatcher domain.EventDispatcher) events.EventSubscriberService {
+	return events.NewEventSubscriberServiceImpl(syncRequestRepository, accountRepository, trioClient, eventDispatcher)
 }
 
 func configureConsumer(ctx context.Context, config *config.Config,
-	eventSubscriberService domain.EventSubscriberService) *infra.Consumer {
+	eventSubscriberService events.EventSubscriberService) *infra.Consumer {
 	consumer := infra.NewConsumer(ctx, []string{config.KafkaBroker},
 		config.SyncRequestInputTopic, config.KafkaClientId)
 	go consumer.StartReading(eventSubscriberService.OnMessageReceive)

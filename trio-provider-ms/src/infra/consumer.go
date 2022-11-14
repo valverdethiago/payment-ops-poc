@@ -2,10 +2,10 @@ package infra
 
 import (
 	"context"
+	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/events"
 	"log"
 	"os"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/domain"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -13,7 +13,7 @@ type Consumer struct {
 	ctx              context.Context
 	brokers          []string
 	reader           kafka.Reader
-	onMessageReceive domain.OnMessageReceive
+	onMessageReceive events.OnMessageReceive
 }
 
 func NewConsumer(ctx context.Context, brokers []string, topic string, groupId string) *Consumer {
@@ -33,7 +33,7 @@ func NewConsumer(ctx context.Context, brokers []string, topic string, groupId st
 
 }
 
-func (consumer *Consumer) StartReading(onMessageReceive domain.OnMessageReceive) {
+func (consumer *Consumer) StartReading(onMessageReceive events.OnMessageReceive) {
 	for {
 		msg, err := consumer.reader.ReadMessage(consumer.ctx)
 		if err != nil {

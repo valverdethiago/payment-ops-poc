@@ -1,12 +1,14 @@
 package domain
 
-import "github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
+import (
+	"github.com/Pauca-Technologies/payment-ops-poc/trio-provider-ms/restclient"
+)
 
-type FetchData func(string) (*restclient.FetchRequestResponse, error)
+type FetchData func(account Account) (*restclient.FetchRequestResponse, error)
 
 type TrioClient interface {
-	FetchBalancesFromBank(AccountId string) (*restclient.FetchRequestResponse, error)
+	FetchBalancesFromBank(account Account) (*restclient.FetchRequestResponse, error)
 	ListBalance(AccountId string) (*restclient.ListBalanceResponse, error)
-	FetchTransactionsFromBank(AccountId string) (*restclient.FetchRequestResponse, error)
-	ListTransactions(AccountId string) (*restclient.ListTransactionsResponse, error)
+	FetchTransactionsFromBank(account Account) (*restclient.FetchRequestResponse, error)
+	ListTransactions(account Account) (*restclient.ListTransactionsResponse, error)
 }

@@ -34,14 +34,14 @@ func (repository *SyncRequestMongoDbRepositoryImpl) Find(ID bson.ObjectId) (*dom
 	return &syncRequest, err
 }
 
-func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequests(AccountId uuid.UUID, Type *domain.SyncType) ([]domain.SyncRequest, error) {
+func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequests(AccountId uuid.UUID, Type domain.SyncType) ([]domain.SyncRequest, error) {
 	var syncRequest []domain.SyncRequest
 	filter := bson.D{
 		{"accountid", AccountId},
 		{"synctype", Type},
 		{"$or", []interface{}{
-			bson.D{{"requeststatus", "PENDING"}},
-			bson.D{{"requeststatus", "CREATED"}},
+			bson.D{{"requeststatus", domain.RequestStatusCreated}},
+			bson.D{{"requeststatus", domain.RequestStatusPending}},
 		}},
 	}
 	err := repository.collection.Find(filter).All(&syncRequest)
@@ -55,6 +55,14 @@ func (repository *SyncRequestMongoDbRepositoryImpl) Insert(Request *domain.SyncR
 }
 
 func (repository *SyncRequestMongoDbRepositoryImpl) Update(Request *domain.SyncRequest) (*domain.SyncRequest, error) {
-	err := repository.collection.Update(Request.ID, &Request)
+	err := repository.collection.UpdateId(Request.ID, &Request)
 	return Request, err
+}
+
+func (repository *SyncRequestMongoDbRepositoryImpl) FindPendingRequestByAccountIdAndSyncType(accountId uuid.UUID, syncType domain.SyncType) (*domain.SyncRequest, error) {
+	syncRequests, err := repository.FindPendingRequests(accountId, syncType)
+	if err != nil || len(syncRequests) <= 0 {
+		return nil, err
+	}
+	return &syncRequests[0], nil
 }
