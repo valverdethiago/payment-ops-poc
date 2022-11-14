@@ -48,8 +48,13 @@ func (store *MongoDbStore) FindPendingRequests(AccountId uuid.UUID, Type *domain
 	return syncRequest, err
 }
 
-func (store *MongoDbStore) Store(Request *domain.SyncRequest) (*domain.SyncRequest, error) {
+func (store *MongoDbStore) Insert(Request *domain.SyncRequest) (*domain.SyncRequest, error) {
 	Request.ID = bson.NewObjectId()
 	err := store.collection.Insert(&Request)
+	return Request, err
+}
+
+func (store *MongoDbStore) Update(Request *domain.SyncRequest) (*domain.SyncRequest, error) {
+	err := store.collection.UpdateId(Request.ID, Request)
 	return Request, err
 }

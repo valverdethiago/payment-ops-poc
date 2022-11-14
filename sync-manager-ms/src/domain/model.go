@@ -49,3 +49,10 @@ type SyncRequestResult struct {
 	RequestStatus RequestStatus `bson:"request_status" json:"request_status"`
 	Message       string        `bson:"message" json:"message"`
 }
+
+type SyncRequestEvent struct {
+	Id            string        `json:"id"`
+	RequestStatus RequestStatus `json:"request_status"`
+	Message       *string       `json:"message"`
+	SentAt        time.Time     `json:"sent_at"`
+}

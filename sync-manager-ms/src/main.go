@@ -33,19 +33,28 @@ func configureKafkaProducer(ctx context.Context, config *config.Config) *infra.P
 	return infra.NewProducer(ctx, []string{config.KafkaBroker}, config.SyncRequestTopic)
 }
 
-func configureService(config *config.Config, producer *infra.Producer) domain.SyncRequestService {
+func configureKafkaConsumer(ctx context.Context, config *config.Config,
+	eventSubscriberService domain.EventSubscriberService) *infra.Consumer {
+	consumer := infra.NewConsumer(ctx, []string{config.KafkaBroker}, config.SyncRequestTopicOutput, config.KafkaClientId)
+	go consumer.StartReading(eventSubscriberService.OnReceiveSyncRequestUpdate)
+	return consumer
+}
+
+func configureServices(config *config.Config, producer *infra.Producer) (domain.SyncRequestService, domain.EventSubscriberService) {
 	database := openDatabaseConnection(config)
 	repository := adapters.NewMongoDbStore(database)
-	service := domain.NewSyncRequestService(repository, producer)
-	return service
+	eventDispatcher := adapters.NewEventDispatcherImpl(*producer)
+	syncRequestService := domain.NewSyncRequestService(repository, eventDispatcher)
+	return syncRequestService, domain.NewEventSubscriberServiceImpl(syncRequestService)
 }
 
 func configureServer(config *config.Config) *api.Server {
 	ctx := context.Background()
 	server := api.NewServer(config)
 	producer := configureKafkaProducer(ctx, config)
-	service := configureService(config, producer)
-	controller := domain.NewSyncRequestController(service)
+	syncRequestService, eventSubscriberService := configureServices(config, producer)
+	configureKafkaConsumer(ctx, config, eventSubscriberService)
+	controller := domain.NewSyncRequestController(syncRequestService)
 	server.ConfigureController(controller)
 	return server
 }

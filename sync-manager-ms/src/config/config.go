@@ -8,14 +8,15 @@ import (
 )
 
 type Config struct {
-	KafkaBroker      string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
-	kafkaClientId    string `mapstructure:"SYNC_MANAGER_KAFKA_CLIENT_ID"`
-	DBServer         string `mapstructure:"SYNC_MANAGER_DB_SERVER"`
-	DBName           string `mapstructure:"SYNC_MANAGER_DB_NAME"`
-	ServerAddress    string `mapstructure:"SYNC_MANAGER_SERVER_ADDRESS"`
-	ReadTimeout      int    `mapstructure:"SYNC_MANAGER_READ_TIMEOUT"`
-	WriteTimeout     int    `mapstructure:"SYNC_MANAGER_WRITE_TIMEOUT"`
-	SyncRequestTopic string `mapstructure:"SYNC_REQUEST_TOPIC"`
+	KafkaBroker            string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
+	KafkaClientId          string `mapstructure:"SYNC_MANAGER_KAFKA_CLIENT_ID"`
+	DBServer               string `mapstructure:"SYNC_MANAGER_DB_SERVER"`
+	DBName                 string `mapstructure:"SYNC_MANAGER_DB_NAME"`
+	ServerAddress          string `mapstructure:"SYNC_MANAGER_SERVER_ADDRESS"`
+	ReadTimeout            int    `mapstructure:"SYNC_MANAGER_READ_TIMEOUT"`
+	WriteTimeout           int    `mapstructure:"SYNC_MANAGER_WRITE_TIMEOUT"`
+	SyncRequestTopic       string `mapstructure:"SYNC_REQUEST_TOPIC"`
+	SyncRequestTopicOutput string `mapstructure:"SYNC_REQUESTS_OUTPUT_TOPIC"`
 }
 
 // LoadConfig loads config from env

@@ -1,26 +1,24 @@
 package domain
 
 import (
-	"encoding/json"
 	"time"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/Pauca-Technologies/payment-ops-poc/sync-manager-ms/infra"
 	"github.com/google/uuid"
 )
 
 type syncRequestService struct {
 	syncRequestRepository SyncRequestRepository
-	producer              *infra.Producer
+	eventDispatcher       EventDispatcher
 }
 
 func NewSyncRequestService(syncRequestRepository SyncRequestRepository,
-	producer *infra.Producer) SyncRequestService {
+	eventDispatcher EventDispatcher) SyncRequestService {
 	return &syncRequestService{
 		syncRequestRepository,
-		producer,
+		eventDispatcher,
 	}
 }
 
@@ -39,6 +37,15 @@ func (service *syncRequestService) Request(AccountId uuid.UUID, Type *SyncType) 
 	return service.createSyncRequest(AccountId, Type)
 }
 
+func (service *syncRequestService) UpdateSyncRequestStatus(syncRequest *SyncRequest, status RequestStatus) error {
+	if syncRequest.RequestStatus == status {
+		return nil
+	}
+	syncRequest.RequestStatus = status
+	syncRequest, err := service.syncRequestRepository.Update(syncRequest)
+	return err
+}
+
 func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *SyncType) (_ *SyncRequest, err error) {
 
 	request := &SyncRequest{
@@ -48,18 +55,13 @@ func (service *syncRequestService) createSyncRequest(AccountId uuid.UUID, Type *
 		SyncType:      Type,
 		AccountId:     AccountId.String(),
 	}
-	entity, err := service.syncRequestRepository.Store(request)
+	entity, err := service.syncRequestRepository.Insert(request)
 	if err != nil {
 		return nil, err
 	}
-	jsonString, err := json.Marshal(entity)
-	if err != nil {
-		return nil, err
-	}
-	err = service.producer.SendMessage(bson.NewObjectId().Hex(), string(jsonString))
+	err = service.eventDispatcher.CreateSyncRequest(*request)
 	if err != nil {
 		return nil, err
 	}
 	return entity, err
-
 }

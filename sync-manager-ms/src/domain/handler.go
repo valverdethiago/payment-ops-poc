@@ -51,12 +51,12 @@ func (controller *SyncRequestController) NewRequest(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	AccountId, err := parseUUID(req.AccountId)
+	AccountId, err := ParseUUID(req.AccountId)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	SyncType, err := parseSyncType(req.SyncType)
+	SyncType, err := ParseSyncType(req.SyncType)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -74,7 +74,7 @@ func (controller *SyncRequestController) assertRequestExists(ctx *gin.Context) (
 	if err != nil {
 		return nil, err
 	}
-	ID := parseBson(req.ID)
+	ID := ParseBson(req.ID)
 	syncRequest, err := controller.service.Find(ID)
 	if err != nil {
 		if err == mgo.ErrNotFound {
