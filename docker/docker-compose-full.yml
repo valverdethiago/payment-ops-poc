@@ -1,0 +1,283 @@
+services:
+  demo_sync_manager_db:
+    image: mongo
+    container_name: demo_sync_manager_db
+    hostname: demo_sync_manager_db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: sync_manager
+      MONGODB_DATABASE: sync_manager
+    volumes: 
+      - demo_sync_manager_data_volume:/data/db
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo-sync-manager-db-ui:
+    image: mongo-express
+    container_name: demo_sync_manager_db_ui
+    hostname: sync_manager_db_ui
+    restart: unless-stopped
+    ports:
+      - "8880:8081"
+    environment:      
+      ME_CONFIG_MONGODB_SERVER: demo_sync_manager_db
+    links:
+      - demo_sync_manager_db
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_trio_provider_db:
+    image: mongo
+    container_name: demo_trio_provider_db
+    hostname: demo_trio_provider_db
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: trio_provider
+      MONGODB_DATABASE: trio_provider
+    volumes:
+      - demo_trio_provider_db_data_volume:/data/db
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_trio_provider_db_ui:
+    image: mongo-express
+    container_name: demo_trio_provider_db_ui
+    hostname: demo_trio_provider_db_ui
+    restart: unless-stopped
+    ports:
+      - "8881:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: demo_trio_provider_db
+    links:
+      - demo_trio_provider_db
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_bank_transactional_db:
+    image: postgres:10-alpine
+    container_name: demo_bank_transactional_db
+    hostname: demo_bank_transactional_db
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    volumes:
+        - demo_bank_transactional_data_volume:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: bank_transactional_db
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_bank_transactional_ui:
+    image: dpage/pgadmin4
+    container_name: demo_bank_transactional_ui
+    hostname: demo_bank_transactional_ui
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "thiago@pauca.co"
+      PGADMIN_DEFAULT_PASSWORD: "Pauca!2022"
+    ports:
+      - "9001:80"
+    volumes:
+      - demo_bank_transactional_data_ui_volume:/var/lib/pgadmin
+    links:
+      - demo_bank_transactional_db
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_zoo:
+    image: zookeeper:3.4.9
+    restart: unless-stopped
+    hostname: demo_zoo
+    container_name: demo_zoo
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=demo_zoo:2888:3888
+    volumes:
+      - demo_zoo_data_volume:/data
+      - demo_zoo_datalog_volume:/datalog
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    hostname: demo_kafka
+    container_name: demo_kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://demo_kafka:19092,LISTENER_DOCKER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "demo_zoo:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - demo_kafka_volume:/var/lib/kafka/data
+    depends_on:
+      - demo_zoo
+    networks:
+      - demo_payment_ops_poc_network
+
+  # This "container" is a workaround to pre-create topics
+  demo_kafka_setup:
+    image: confluentinc/cp-kafka:5.3.1
+    hostname: demo_kafka_setup
+    container_name: demo_kafka_setup
+    depends_on:
+      - demo_kafka
+      - demo_zoo
+    volumes:
+      - demo_kafka_setup_connectors_volume:/tmp/connectors
+      - demo_kafka_setup_dashboard_volume:/tmp/dashboard
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b demo_kafka:19092 1 20 && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_INPUT   && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_OUTPUT  && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic TRIO_SYNC_REQUEST_INPUT && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic BALANCE_UPDATE && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic TRANSACTIONS_UPDATE' "
+
+
+    environment:
+      # The following settings are listed here only to satisfy the image's requirements.
+      # We override the image's `command` anyway, hence this container will not start a broker.
+      KAFKA_BROKER_ID: ignored
+      KAFKA_ZOOKEEPER_CONNECT: ignored
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_kafka_ui:
+    image: obsidiandynamics/kafdrop
+    restart: unless-stopped
+    hostname: demo_kafka_ui
+    container_name: demo_kafka_ui
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: demo_kafka:19092
+    depends_on:
+      - demo_kafka
+      - demo_zoo
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_bank_transactional_backend:
+    container_name: demo_bank_transactional_backend
+    hostname: demo_bank_transactional_backend
+    restart: unless-stopped
+    build:
+      context: ../bank-transactional-ms
+      dockerfile: ./docker/Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: demo_kafka:19092
+      SYNC_REQUEST_INPUT_TOPIC: SYNC_REQUESTS_INPUT
+      SYNC_REQUEST_OUTPUT_TOPIC: SYNC_REQUESTS_OUTPUT
+      BALANCE_UPDATE_TOPIC: BALANCE_UPDATE
+      TRANSACTIONS_UPDATE_TOPIC: TRANSACTIONS_UPDATE
+      BANK_TRANSACTIONAL_KAFKA_CLIENT_ID: bank-transaction-ms-client
+      BANK_TRANSACTIONAL_DB_SOURCE: postgresql://postgres:postgres@demo_bank_transactional_db:5432/bank_transactional_db?sslmode=disable
+      BANK_TRANSACTIONAL_DB_DRIVER: postgres
+      BANK_TRANSACTIONAL_SERVER_ADDRESS: 0.0.0.0:8082
+      BANK_TRANSACTIONAL_READ_TIMEOUT: 5
+      BANK_TRANSACTIONAL_WRITE_TIMEOUT: 5
+    ports:
+      - 8082:8082
+    links:
+      - demo_bank_transactional_db
+      - demo_kafka
+      - demo_zoo
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_trio_provider_backend:
+    container_name: demo_trio_provider_backend
+    hostname: demo_trio_provider_backend
+    restart: unless-stopped
+    build:
+      context: ../trio-provider-ms
+      dockerfile: ./docker/Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: demo_kafka:19092
+      SYNC_REQUESTS_OUTPUT_TOPIC: SYNC_REQUESTS_OUTPUT
+      BALANCE_UPDATE_TOPIC: BALANCE_UPDATE
+      TRANSACTIONS_UPDATE_TOPIC: TRANSACTIONS_UPDATE
+      TRIO_PROVIDER_KAFKA_CLIENT_ID: trio-provider-ms-client
+      TRIO_SYNC_REQUEST_INPUT_TOPIC: TRIO_SYNC_REQUEST_INPUT
+      TRIO_PROVIDER_DB_SERVER: mongodb://demo_trio_provider_db:27017
+      TRIO_PROVIDER_DB_NAME: trio_provider
+      TRIO_PROVIDER_SERVER_ADDRESS: 0.0.0.0:8083
+      TRIO_PROVIDER_READ_TIMEOUT: 5
+      TRIO_PROVIDER_WRITE_TIMEOUT: 5
+      TRIO_PROVIDER_BASE_PATH: https://sandbox.trio.com.br
+      TRIO_PROVIDER_CLIENT_ID: 78a1ae88-e5df-48b5-8c8d-e5a4d5a8bfed
+      TRIO_PROVIDER_CLIENT_SECRET: sk_sandbox_70XGzE44B/UhoidaqJpyyfwSR+OU2E0Buve8TJB4f0g=
+    ports:
+      - 8083:8083
+    links:
+      - demo_trio_provider_db
+      - demo_kafka
+      - demo_zoo
+    networks:
+      - demo_payment_ops_poc_network
+
+  demo_sync_manager_backend:
+    container_name: demo_sync_manager_backend
+    hostname: demo_sync_manager_backend
+    restart: unless-stopped
+    build:
+      context: ../sync-manager-ms
+      dockerfile: ./docker/Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: demo_kafka:19092
+      SYNC_MANAGER_KAFKA_CLIENT_ID: sync-manager-ms-client
+      SYNC_REQUEST_TOPIC: SYNC_REQUESTS_INPUT
+      SYNC_REQUESTS_OUTPUT_TOPIC: SYNC_REQUESTS_OUTPUT
+      SYNC_MANAGER_DB_SERVER: demo_sync_manager_db
+      SYNC_MANAGER_DB_NAME: sync_manager
+      SYNC_MANAGER_SERVER_ADDRESS: 0.0.0.0:8081
+      SYNC_MANAGER_READ_TIMEOUT: 5
+      SYNC_MANAGER_WRITE_TIMEOUT: 5
+    ports:
+      - 8081:8081
+    links:
+      - demo_sync_manager_db
+      - demo_kafka
+      - demo_zoo
+    networks:
+      - demo_payment_ops_poc_network
+
+volumes:
+  demo_kafka_volume:
+    external: false
+  demo_zoo_data_volume:
+    external: false
+  demo_zoo_datalog_volume:
+    external: false
+  demo_kafka_setup_connectors_volume:
+    external: false
+  demo_kafka_setup_dashboard_volume:
+    external: false
+  demo_sync_manager_data_volume:
+    external: false
+  demo_bank_transactional_data_volume:
+    external: false
+  demo_bank_transactional_data_ui_volume:
+    external: false
+  demo_trio_provider_db_data_volume:
+    external: false
+
+
+networks:
+  demo_payment_ops_poc_network:
+      driver: bridge

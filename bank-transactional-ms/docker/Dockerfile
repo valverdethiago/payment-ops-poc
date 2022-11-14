@@ -1,5 +1,7 @@
 FROM golang:alpine
 
+RUN apk add --no-cache bash
+
 # Set necessary environmet variables needed for our image
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
