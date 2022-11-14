@@ -12,25 +12,25 @@ import (
 )
 
 const findAccountStatuses = `-- name: FindAccountStatuses :one
-  select activity.activity_type = 'ENABLED' and activity.activity_type <> 'INVALIDATED' as IS_ACTIVE, 
+  select activity.activity_type = 'ENABLED' as IS_ENABLED, 
          activity.activity_type = 'DISABLED' as IS_DISABLED,
          activity.activity_type = 'INVALIDATED' as IS_INVALIDATED
     from account_activity as activity 
-   where activity.account_uuid = '283191b8-3bc0-4b9a-9be9-e44635eb0438'  
+   where activity.account_uuid = $1
 order by activity.date_time desc
   limit 1
 `
 
 type FindAccountStatusesRow struct {
-	IsActive      interface{} `json:"is_active"`
-	IsDisabled    bool        `json:"is_disabled"`
-	IsInvalidated bool        `json:"is_invalidated"`
+	IsEnabled     bool `json:"is_enabled"`
+	IsDisabled    bool `json:"is_disabled"`
+	IsInvalidated bool `json:"is_invalidated"`
 }
 
-func (q *Queries) FindAccountStatuses(ctx context.Context) (FindAccountStatusesRow, error) {
-	row := q.db.QueryRowContext(ctx, findAccountStatuses)
+func (q *Queries) FindAccountStatuses(ctx context.Context, accountUuid uuid.UUID) (FindAccountStatusesRow, error) {
+	row := q.db.QueryRowContext(ctx, findAccountStatuses, accountUuid)
 	var i FindAccountStatusesRow
-	err := row.Scan(&i.IsActive, &i.IsDisabled, &i.IsInvalidated)
+	err := row.Scan(&i.IsEnabled, &i.IsDisabled, &i.IsInvalidated)
 	return i, err
 }
 

@@ -11,12 +11,13 @@ import (
 )
 
 type Querier interface {
-	FindAccountStatuses(ctx context.Context) (FindAccountStatusesRow, error)
+	FindAccountStatuses(ctx context.Context, accountUuid uuid.UUID) (FindAccountStatusesRow, error)
 	FindLastActivityByAccount(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 	GetAccountByID(ctx context.Context, accountUuid uuid.UUID) (Account, error)
 	GetBankByID(ctx context.Context, bankUuid uuid.UUID) (Bank, error)
 	GetConfigurationByBankID(ctx context.Context, bankUuid uuid.UUID) (Configuration, error)
 	GetConfigurationByID(ctx context.Context, configurationUuid uuid.UUID) (Configuration, error)
+	GetFullAccountInfoByID(ctx context.Context, accountUuid uuid.UUID) (GetFullAccountInfoByIDRow, error)
 	IsAccountEnabled(ctx context.Context, accountUuid uuid.UUID) (AccountActivity, error)
 }
 

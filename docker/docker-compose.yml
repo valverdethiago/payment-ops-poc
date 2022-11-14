@@ -10,7 +10,7 @@ services:
       MONGO_INITDB_DATABASE: sync-manager
       MONGODB_DATABASE: sync-manager
     volumes: 
-      - sync-manager_data:/data/db
+      - sync-manager-data-volume:/data/db
     networks:
       - payment-ops-poc-network
 
@@ -36,7 +36,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-        - bank-transactional_data:/var/lib/postgresql
+        - bank-transactional-data-volume:/var/lib/postgresql
     environment:
       POSTGRES_DB: bank_transactional_db
       POSTGRES_USER: 'postgres'
@@ -111,7 +111,10 @@ services:
       - kafka-setup-dashboard-volume:/tmp/dashboard
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                        cub kafka-ready -b kafka:19092 1 20 && \
-                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_INPUT  '"
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_INPUT   && \
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic SYNC_REQUESTS_OUTPUT  && \
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic TRIO_SYNC_REQUEST_INPUT '"
+
     environment:
       # The following settings are listed here only to satisfy the image's requirements.
       # We override the image's `command` anyways, hence this container will not start a broker.
@@ -146,8 +149,10 @@ volumes:
     external: false
   kafka-setup-dashboard-volume:
     external: false
-  sync-manager_data:
-  bank-transactional_data: 
+  sync-manager-data-volume:
+    external: false
+  bank-transactional-data-volume:
+    external: false
 
 
 networks: 

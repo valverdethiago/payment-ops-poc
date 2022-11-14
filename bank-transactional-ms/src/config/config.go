@@ -8,14 +8,15 @@ import (
 )
 
 type Config struct {
-	KafkaBroker      string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
-	kafkaClientId    string `mapstructure:"BANK_TRANSACTIONAL_KAFKA_CLIENT_ID"`
-	DBSource         string `mapstructure:"BANK_TRANSACTIONAL_DB_SOURCE"`
-	DBDriver         string `mapstructure:"BANK_TRANSACTIONAL_DB_DRIVER"`
-	ServerAddress    string `mapstructure:"BANK_TRANSACTIONAL_SERVER_ADDRESS"`
-	ReadTimeout      int    `mapstructure:"BANK_TRANSACTIONAL_READ_TIMEOUT"`
-	WriteTimeout     int    `mapstructure:"BANK_TRANSACTIONAL_WRITE_TIMEOUT"`
-	SyncRequestTopic string `mapstructure:"SYNC_REQUEST_TOPIC"`
+	KafkaBroker            string `mapstructure:"KAFKA_BOOTSTRAP_SERVER"`
+	KafkaClientId          string `mapstructure:"BANK_TRANSACTIONAL_KAFKA_CLIENT_ID"`
+	DBSource               string `mapstructure:"BANK_TRANSACTIONAL_DB_SOURCE"`
+	DBDriver               string `mapstructure:"BANK_TRANSACTIONAL_DB_DRIVER"`
+	ServerAddress          string `mapstructure:"BANK_TRANSACTIONAL_SERVER_ADDRESS"`
+	ReadTimeout            int    `mapstructure:"BANK_TRANSACTIONAL_READ_TIMEOUT"`
+	WriteTimeout           int    `mapstructure:"BANK_TRANSACTIONAL_WRITE_TIMEOUT"`
+	SyncRequestInputTopic  string `mapstructure:"SYNC_REQUEST_INPUT_TOPIC"`
+	SyncRequestOutputTopic string `mapstructure:"SYNC_REQUEST_OUTPUT_TOPIC"`
 }
 
 // LoadConfig loads config from env
