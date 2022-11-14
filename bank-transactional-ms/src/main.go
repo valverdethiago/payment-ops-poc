@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"log"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 
 	"github.com/Pauca-Technologies/payment-ops-poc/bank-transactional-ms/adapters"
@@ -30,6 +33,17 @@ func loadConfig() *config.Config {
 
 func openDatabaseConnection(config *config.Config) *sql.DB {
 	return util.ConnectToDatabase(config)
+}
+
+func executeMigrations(db *sql.DB) {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://./db/migrations",
+		"postgres", driver)
+	if err != nil {
+		log.Fatal("Failed to apply database migrations", err)
+	}
+	m.Up()
 }
 
 func configureAccountRepository(ctx context.Context, querier db.Querier) domain.AccountRepository {
@@ -60,6 +74,7 @@ func configureServer(config *config.Config) *api.Server {
 	ctx := context.Background()
 	server := api.NewServer(config)
 	conn := openDatabaseConnection(config)
+	executeMigrations(conn)
 	queries := db.New(conn)
 	accountRepository := configureAccountRepository(ctx, queries)
 	accountService := configureAccountService(accountRepository)
