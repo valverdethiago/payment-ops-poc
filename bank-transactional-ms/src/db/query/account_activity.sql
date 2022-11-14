@@ -11,5 +11,6 @@ order by activity.date_time desc
          activity.activity_type = 'INVALIDATED' as IS_INVALIDATED
     from account_activity as activity 
    where activity.account_uuid = $1
+     and activity.activity_type in ('ENABLED' ,'DISABLED' , 'INVALIDATED')
 order by activity.date_time desc
   limit 1;
